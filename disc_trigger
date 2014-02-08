@@ -1,0 +1,150 @@
+#!/bin/bash
+
+export USR=media
+export GRP=media
+export TMPDIR=/tmp
+
+ME=$$
+MEDIA=
+DEST_DIR=
+DEVICE="$DEVNAME"
+TITLE="$ID_FS_LABEL" # Media title; usually the film name if a DVD/Bluray
+
+# Configurable variables/parameters etc.
+[ -f /etc/disc_trigger.conf ] && . /etc/disc_trigger.conf
+
+check_fs() {
+	local -r v=`grep -c " ${1} " /proc/mounts`
+	[ $v = "1" ] && return 0 || return 1
+}
+
+generic_mount() {
+	local -r u=`id -u ${USR}`
+	local -r g=`id -g ${GRP}`
+
+	[ ${NO_MOUNT} -eq 1 ] && return 0
+
+	check_fs "/media/${MEDIA}" && return 1
+	mount -o ro,nosuid,nodev,user,umask=0077,uid=${u},gid=${g} \
+		${DEVICE} /media/${MEDIA}
+
+	return $?
+}
+
+generic_umount() {
+	[ ${NO_EJECT} -eq 1 ] && return 0
+
+	check_fs "/media/${MEDIA}" && umount "/media/${MEDIA}"
+	eject "${DEVICE}"
+
+	return $?
+}
+
+run_encoder() {
+	local -a encoder_ops=("${DVD_ENCODER_OPTS[@]}" "${1% *}" "${1#* }")
+
+	HandBrakeCLI "${encoder_ops[@]}" -i ${DEVICE} -o "$2" 2>&1 \
+		&& echo "$2" >> "${3}/${MEDIA}-rips.txt" \
+		&& chown -R ${USR}:${GRP} "$3"
+}
+
+run_dvd() {
+	local p="/mnt/${DEST_DIR}"
+	local d="`echo ${p}/${CATEGORY}/${TITLE:0:1}/${TITLE} | tr A-Z a-z`"
+	local f="${TITLE_PREFIX}`echo ${TITLE} | tr A-Z a-z`${TITLE_SUFFIX}"
+
+	check_fs "$p" || return 1
+	mkdir -p "$d" || return 1
+
+	for t in ${TITLES[@]}
+	do
+		if [ $t -gt 0 ]
+		then
+			run_encoder "--title $t" "${d}/${f}.${t}.mkv" "$p"
+		else
+			run_encoder '--main-feature' "${d}/${f}.mkv" "$p"
+		fi
+	done
+}
+
+run_cdrom() {
+	local p="/mnt/${DEST_DIR}"
+
+	check_fs "$p" || return 1
+
+	abcde -w 'Ripped with abcde' -N -d "${DEVICE}" \
+		 && chown -R ${USR}:${GRP} "${p}"
+}
+
+find_mkv() {
+	find "$1" -xdev -maxdepth 1 -type f -name '*.mkv'
+}
+
+run_bluray() {
+	local x="/tmp/title-"
+	local p="/mnt/${DEST_DIR}"
+	local d="`echo ${p}/${CATEGORY}/${TITLE:0:1}/${TITLE} | tr A-Z a-z`"
+	local f="${TITLE_PREFIX}`echo ${TITLE} | tr A-Z a-z`${TITLE_SUFFIX}.mkv"
+
+	check_fs "$p" || return 1
+	mkdir -p "$d" || return 1
+
+	# Gather information about the disc in the drive
+	[ $NO_BLURAY_DISCOVER -eq 1 ] || \
+	makemkvcon -r info dev:${DEVICE} > "/tmp/${MEDIA}.nfo" 2>&1
+
+	# Split the output into a series of record files; one for each title
+	cat "/tmp/${MEDIA}.nfo" | awk -f <(cat - <<-EOF
+		/^TINFO:[0-9]+,[0-9]+,0,"[0-9]+:[0-9]+:[0-9]+"$/ {
+			close("$x"i);++i
+		} {
+			print \$0 > "$x"i
+		}
+	EOF
+	)
+
+	# Sort the titles and identify the longest (in duration) one
+	ttl=`grep '^TINFO:[0-9]*,9,0,".*"$' ${x}[0-9]* \
+	| tr -d \" | sort -rt, -k4 | head -n1 | cut -d: -f3`
+
+	[ "x${ttl}" = "x" ] && return 1
+	rm -f "/tmp/${MEDIA}.nfo" "${x}*"
+
+	makemkvcon mkv dev:${DEVICE} "${ttl%%,*}" "$p" 2>&1 \
+		 && rm -fr /tmp/MakeMKV-* \
+		 && HandBrakeCLI "${BLURAY_ENCODER_OPTS[@]}" \
+			-i "`find_mkv $p`" -o "$d/$f" 2>&1 \
+		 && rm -f "`find_mkv $p`" \
+		 && chown -R ${USR}:${GRP} "${p}" \
+		 && echo "$d/$f" >> "${p}/${MEDIA}-rips.txt"
+}
+
+sleep 2
+
+if [ "$ID_CDROM_MEDIA_BD" = "1" ]
+then
+	(
+	MEDIA=bluray
+	DEST_DIR=video
+	generic_mount || exit 1
+	prologue && run_bluray && generic_umount && epilogue
+	) > /tmp/bluray-rip.${ME} 2>&1 &
+elif [ "$ID_CDROM_MEDIA_DVD" = "1" ]
+then
+	(
+	MEDIA=dvd
+	DEST_DIR=video
+	generic_mount || exit 1
+	prologue && run_dvd && generic_umount && epilogue
+	) > /tmp/dvd-rip.${ME} 2>&1 &
+elif [ "$ID_CDROM_MEDIA_CD" = "1" ]
+then
+	(
+	NO_MOUNT=1
+	MEDIA=cdrom
+	DEST_DIR=music
+	generic_mount || exit 1
+	prologue && run_cdrom && generic_umount && epilogue
+	) > /tmp/cdrom-rip.${ME} 2>&1 &
+fi
+
