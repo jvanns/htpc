@@ -2,9 +2,10 @@
 
 set -eu
 
+DUMMY=''
+TARGET=''
 NOW=`date +%s`
 NAME="`uname -n`"
-TARGET="${1}/$NAME"
 
 check_fs() {
 	local v=`grep -c " ${1} " /proc/mounts`
@@ -47,7 +48,7 @@ backup_system()
 			name='root'
 		fi
 		
-		dump -${level} -uj -v \
+		$DUMMY dump -${level} -uj -v \
 			-A "${d}/dump-${name}-archive-${level}.log" \
 			-f "${d}/dump-${name}-db-${level}.log" "${fs}"
 	done
@@ -68,13 +69,38 @@ backup_data()
 			name='root'
 		fi
 
-		rsync -aqmx --delete-during -T /tmp -h --progress "${fs}" "${d}/${name}"
+		$DUMMY rsync -aqmx --delete-during -T /tmp -h --progress \
+         "${fs}" "${d}/${name}"
 	done
 }
+
+while getopts 'dh' OPTION; do
+   case $OPTION in
+   d)
+      DUMMY=echo
+      ;;
+   h)
+      echo "Run the HTPC backup process for $NAME"
+      echo "Usage: $0 [options] <device>"
+      exit 0
+      ;;
+   ?)
+      exit 1
+      ;;
+   esac
+done
+shift $(($OPTIND - 1))
+
+if [ -z "$1" ]; then
+   echo "$0: Required device path not provided; try -h" >&2
+   exit 1
+fi
+
+TARGET="${1}/$NAME"
 
 check_fs "${1}" || exit 1
 mkdir -p "${TARGET}/logs" || exit 1
 
 backup_data >> "${TARGET}/logs/${NOW}.log" 2>&1
-backup_system > "${TARGET}/logs/${NOW}.log" 2>&1
+backup_system >> "${TARGET}/logs/${NOW}.log" 2>&1
 
