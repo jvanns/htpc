@@ -9,4 +9,7 @@ install:
 	install -C -o root -g root -m 0644 disc-trigger.conf $(DESTDIR)/etc
 	install -C -o root -g root -m 0644 75-optical-drive.rules $(DESTDIR)/etc/udev/rules.d/
 
-.PHONY: install
+release:
+	git archive --format=tar --prefix=htpc/ HEAD | gzip 1> htpc.tar.gz
+
+.PHONY: install .release
