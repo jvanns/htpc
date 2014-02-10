@@ -80,8 +80,9 @@ while getopts 'dh' OPTION; do
       DUMMY=echo
       ;;
    h)
-      echo "Run the HTPC backup process for $NAME"
-      echo "Usage: $0 [options] <device>"
+      echo -e "Usage: $0 [options] <device>\nOptions:"
+      echo "\t-h\tHelp! Print this message then exit"
+      echo "\t-d\tDummy mode - print, don't execute"
       exit 0
       ;;
    ?)
