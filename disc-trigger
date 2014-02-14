@@ -11,7 +11,7 @@ DEVICE="$DEVNAME"
 TITLE="$ID_FS_LABEL" # Media title; usually the film name if a DVD/Bluray
 
 # Configurable variables/parameters etc.
-[ -f /etc/disc_trigger.conf ] && . /etc/disc_trigger.conf
+[ -f /etc/disc-trigger.conf ] && . /etc/disc-trigger.conf
 
 check_fs() {
 	local -r v=`grep -c " ${1} " /proc/mounts`
