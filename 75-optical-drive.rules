@@ -1,1 +1,1 @@
-SUBSYSTEM=="block", ACTION=="change", ENV{ID_CDROM}=="?*", ENV{ID_PATH}=="pci-0000:00:14.1-scsi-0:0:1:0",  RUN+="/usr/bin/nohup /usr/bin/setsid /usr/sbin/disc_trigger", ENV{GENERATED}="1"
+SUBSYSTEM=="block", ACTION=="change", ENV{ID_CDROM}=="?*", ENV{ID_PATH}=="pci-0000:00:14.1-scsi-0:0:1:0",  RUN+="/usr/bin/nohup /usr/bin/setsid /usr/local/sbin/disc_trigger", ENV{GENERATED}="1"
