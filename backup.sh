@@ -69,7 +69,7 @@ backup_data()
 			name='root'
 		fi
 
-		$DUMMY rsync -aqmx --delete-during -T /tmp -h --progress \
+		$DUMMY rsync -aqmxh --delete-during -T /tmp -h --progress --stats \
          "${fs}/" "${d}/${name}/"
 	done
 }
