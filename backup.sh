@@ -70,7 +70,7 @@ backup_data()
 		fi
 
 		$DUMMY rsync -aqmx --delete-during -T /tmp -h --progress \
-         "${fs}" "${d}/${name}"
+         "${fs}/" "${d}/${name}/"
 	done
 }
 
