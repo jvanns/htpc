@@ -81,8 +81,8 @@ while getopts 'dh' OPTION; do
       ;;
    h)
       echo -e "Usage: $0 [options] <device>\nOptions:"
-      echo "\t-h\tHelp! Print this message then exit"
-      echo "\t-d\tDummy mode - print, don't execute"
+      echo -e "\t-h\tHelp! Print this message then exit"
+      echo -e "\t-d\tDummy mode - print, don't execute"
       exit 0
       ;;
    ?)
