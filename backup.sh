@@ -57,7 +57,7 @@ backup_system()
 backup_data()
 {
 	local d="${TARGET}/data"
-	local -a sources=('/mnt/video' '/mnt/music' '/mnt/photo')
+	local -a sources=('/mnt/video' '/mnt/music' '/mnt/photos')
 
 	mkdir -p "$d" || return 1
 
