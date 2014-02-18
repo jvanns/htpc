@@ -2,6 +2,7 @@
 
 set -eu
 
+PURGE=0
 DUMMY=''
 TARGET=''
 NOW=`date +%s`
@@ -34,6 +35,7 @@ next_level()
 
 backup_system()
 {
+   local options=''
 	local -a sources=('/' '/home')
 	local d="${TARGET}/system/`date +%m`"
 
@@ -56,10 +58,12 @@ backup_system()
 
 backup_data()
 {
+   local options=''
 	local d="${TARGET}/data"
 	local -a sources=('/mnt/video' '/mnt/music' '/mnt/photos')
 
 	mkdir -p "$d" || return 1
+   [ $PURGE -eq 1 ] && options='--delete-during'
 
 	for fs in ${sources[@]}
 	do
@@ -69,20 +73,24 @@ backup_data()
 			name='root'
 		fi
 
-		$DUMMY rsync -amxh --delete-during --stats \
+		$DUMMY rsync -amxh --stats "$options" \
          "${fs}/" "${d}/${name}/"
 	done
 }
 
-while getopts 'dh' OPTION; do
+while getopts 'dph' OPTION; do
    case $OPTION in
    d)
       DUMMY=echo
+      ;;
+   p)
+      PURGE=1
       ;;
    h)
       echo -e "Usage: $0 [options] <device>\nOptions:"
       echo -e "\t-h\tHelp! Print this message then exit"
       echo -e "\t-d\tDummy mode - print, don't execute"
+      echo -e "\t-p\tPurge (from the target) as we go "
       exit 0
       ;;
    ?)
