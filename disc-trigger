@@ -58,7 +58,7 @@ run_dvd() {
 
 	for t in ${TITLES[@]}
 	do
-		if [ $t -gt 0 ]
+		if [ $t -ge 0 ]
 		then
 			run_encoder "--title $t" "${d}/${f}.${t}.mkv" "$p"
 		else
@@ -80,20 +80,20 @@ find_mkv() {
 	find "$1" -xdev -maxdepth 1 -type f -name '*.mkv'
 }
 
-run_bluray() {
-	local x="/tmp/title-"
-	local p="/mnt/${DEST_DIR}"
-	local d="`echo ${p}/${CATEGORY}/${TITLE:0:1}/${TITLE} | tr A-Z a-z`"
-	local f="${TITLE_PREFIX}`echo ${TITLE} | tr A-Z a-z`${TITLE_SUFFIX}.mkv"
-
-	check_fs "$p" || return 1
-	mkdir -p "$d" || return 1
+locate_title() {
+	# If a preferred title has been set in the config, use it
+	if [ ${TITLES[0]} -ge 0 ]
+	then
+		echo ${TITLES[0]}
+		return
+	fi
 
 	# Gather information about the disc in the drive
 	[ $NO_BLURAY_DISCOVER -eq 1 ] || \
 	makemkvcon -r info dev:${DEVICE} > "/tmp/${MEDIA}.nfo" 2>&1
 
 	# Split the output into a series of record files; one for each title
+	local x="/tmp/title-"
 	cat "/tmp/${MEDIA}.nfo" | awk -f <(cat - <<-EOF
 		/^TINFO:[0-9]+,[0-9]+,0,"[0-9]+:[0-9]+:[0-9]+"$/ {
 			close("$x"i);++i
@@ -104,11 +104,22 @@ run_bluray() {
 	)
 
 	# Sort the titles and identify the longest (in duration) one
-	ttl=`grep '^TINFO:[0-9]*,9,0,".*"$' ${x}[0-9]* \
-	| tr -d \" | sort -rt, -k4 | head -n1 | cut -d: -f3`
+	grep '^TINFO:[0-9]*,9,0,".*"$' ${x}[0-9]* \
+	| tr -d \" | sort -rt, -k4 | head -n1 | cut -d: -f3
 
-	[ "x${ttl}" = "x" ] && return 1
 	rm -f "/tmp/${MEDIA}.nfo" "${x}*"
+}
+
+run_bluray() {
+	local p="/mnt/${DEST_DIR}"
+	local d="`echo ${p}/${CATEGORY}/${TITLE:0:1}/${TITLE} | tr A-Z a-z`"
+	local f="${TITLE_PREFIX}`echo ${TITLE} | tr A-Z a-z`${TITLE_SUFFIX}.mkv"
+
+	check_fs "$p" || return 1
+	mkdir -p "$d" || return 1
+
+	ttl=`locate_title`
+	[ "x${ttl}" = "x" ] && return 1
 
 	makemkvcon mkv dev:${DEVICE} "${ttl%%,*}" "$p" 2>&1 \
 		 && rm -fr /tmp/MakeMKV-* \
@@ -147,4 +158,3 @@ then
 	prologue && run_cdrom && generic_umount && epilogue
 	) > /tmp/cdrom-rip.${ME} 2>&1 &
 fi
-
