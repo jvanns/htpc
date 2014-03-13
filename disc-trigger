@@ -134,26 +134,27 @@ sleep 2
 
 if [ "$ID_CDROM_MEDIA_BD" = "1" ]
 then
-	(
 	MEDIA=bluray
 	DEST_DIR=video
+	(
 	generic_mount || exit 1
 	prologue && run_bluray && generic_umount && epilogue
 	) > /tmp/bluray-rip.${ME} 2>&1 &
 elif [ "$ID_CDROM_MEDIA_DVD" = "1" ]
 then
-	(
 	MEDIA=dvd
 	DEST_DIR=video
+	(
 	generic_mount || exit 1
 	prologue && run_dvd && generic_umount && epilogue
 	) > /tmp/dvd-rip.${ME} 2>&1 &
 elif [ "$ID_CDROM_MEDIA_CD" = "1" ]
 then
-	(
 	NO_MOUNT=1
+	NO_EJECT=1
 	MEDIA=cdrom
 	DEST_DIR=music
+	(
 	generic_mount || exit 1
 	prologue && run_cdrom && generic_umount && epilogue
 	) > /tmp/cdrom-rip.${ME} 2>&1 &
