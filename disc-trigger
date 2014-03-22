@@ -107,7 +107,7 @@ locate_title() {
 	grep '^TINFO:[0-9]*,9,0,".*"$' ${x}[0-9]* \
 	| tr -d \" | sort -rt, -k4 | head -n1 | cut -d: -f3
 
-	rm -f "/tmp/${MEDIA}.nfo" "${x}*"
+	rm -f "/tmp/${MEDIA}.nfo" "$x*"
 }
 
 run_bluray() {
