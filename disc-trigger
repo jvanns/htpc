@@ -92,22 +92,7 @@ locate_title() {
 	[ $NO_BLURAY_DISCOVER -eq 1 ] || \
 	makemkvcon -r info dev:${DEVICE} > "/tmp/${MEDIA}.nfo" 2>&1
 
-	# Split the output into a series of record files; one for each title
-	local x="/tmp/title-"
-	cat "/tmp/${MEDIA}.nfo" | awk -f <(cat - <<-EOF
-		/^TINFO:[0-9]+,[0-9]+,0,"[0-9]+:[0-9]+:[0-9]+"$/ {
-			close("$x"i);++i
-		} {
-			print \$0 > "$x"i
-		}
-	EOF
-	)
-
-	# Sort the titles and identify the longest (in duration) one
-	grep '^TINFO:[0-9]*,9,0,".*"$' ${x}[0-9]* \
-	| tr -d \" | sort -rt, -k4 | head -n1 | cut -d: -f3
-
-	rm -f "/tmp/${MEDIA}.nfo" "$x*"
+	blutit ${BLUTIT_OPTS[@]} "/tmp/${MEDIA}.nfo"
 }
 
 run_bluray() {
