@@ -70,8 +70,11 @@ def choose_title(current, preferred, options):
         if d1 > d2:
             choice = current
 
-    if choice['lang'] != options.lang:
-        choice = preferred
+    try:
+        if choice['lang'] != options.lang:
+            choice = preferred
+    except KeyError:
+        pass # Language isn't always present in title info
 
     # TODO: Continue adding support for stream parsing to obtain the
     # necessary audio preferences we compare below. For the time being
