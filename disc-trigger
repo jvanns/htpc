@@ -107,7 +107,6 @@ run_bluray() {
 	[ "x${ttl}" = "x" ] && return 1
 
 	makemkvcon mkv dev:${DEVICE} "${ttl%%,*}" "$p" 2>&1 \
-		 && rm -fr /tmp/MakeMKV-* \
 		 && HandBrakeCLI "${BLURAY_ENCODER_OPTS[@]}" \
 			-i "`find_mkv $p`" -o "$d/$f" 2>&1 \
 		 && rm -f "`find_mkv $p`" \
