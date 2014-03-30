@@ -3,6 +3,7 @@
 # Small tool to correctly identify the main feature on a bluray disc
 
 import re
+from pprint import pprint
 from optparse import OptionParser
 from sys import exit, stderr, stdin
 
@@ -41,6 +42,12 @@ def parse_command_line():
                       dest='use_size',
                       default=False,
                       help="""instead of duration, use stream size as the key
+                              [default: %default]""")
+
+    parser.add_option('-v', '--verbose', action='store_true',
+                      dest='verbose',
+                      default=False,
+                      help="""be verbose -- print out title information
                               [default: %default]""")
 
     return parser.parse_args()
@@ -147,6 +154,8 @@ if __name__ == '__main__':
         if old_tid != new_tid:
             preferred_title = choose_title(current_title,\
                                            preferred_title, options)
+            if options.verbose:
+                pprint(current_title, stream=stderr, width=-1)
             current_title = {'title': new_tid} # Start a new record
 
         if info[2] != 0:
