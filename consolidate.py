@@ -13,7 +13,7 @@ from sys import exit, stderr
 from optparse import OptionParser
 
 from os.path import isfile, join
-from os import sep, listdir, rename, mkdir, rmdir, access, R_OK
+from os import sep, listdir, rename, mkdir, rmdir, access, R_OK, F_OK
 
 def parse_command_line():
     parser = OptionParser(version='%prog 0.1')
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     reroute = dict([x.split('-') for x in options.reroute.split(',') if len(x) > 0])
     
     # Create the target output directory first
-    if not options.dryrun:
+    if not options.dryrun and not access(show, F_OK):
         mkdir(show, 0755)
 
     terminate = False
