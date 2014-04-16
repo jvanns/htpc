@@ -1,14 +1,9 @@
 #!/bin/bash
 
-export USR=media
-export GRP=media
-export TMPDIR=/tmp
-
 ME=$$
 MEDIA=
 DEST_DIR=
 DEVICE="$DEVNAME"
-TITLE="$ID_FS_LABEL" # Media title; usually the film name if a DVD/Bluray
 
 # Configurable variables/parameters etc.
 [ -f /etc/disc-trigger.conf ] && . /etc/disc-trigger.conf
@@ -41,33 +36,29 @@ generic_umount() {
 }
 
 run_encoder() {
-	local -a encoder_ops=("${DVD_ENCODER_OPTS[@]}" "${1% *}" "${1#* }")
-
-	HandBrakeCLI "${encoder_ops[@]}" -i ${DEVICE} -o "$2" 2>&1 \
-		&& echo "$2" >> "${3}/${MEDIA}-rips.txt" \
-		&& chown -R ${USR}:${GRP} "$3"
+	local -i audio_stream=`audio-info "$1" | audio-prefs ${AUDIO_PREFS_OPTS[@]}`
+	HandBrakeCLI "${HANDBRAKE_OPTS[@]}" \
+		-a $(($audio_stream + 1)) \
+		-i "$1" -o "$2"
 }
 
-run_dvd() {
-	local p="/mnt/${DEST_DIR}"
-	local d="`echo ${p}/${CATEGORY}/${TITLE:0:1}/${TITLE} | tr A-Z a-z`"
-	local f="${TITLE_PREFIX}`echo ${TITLE} | tr A-Z a-z`${TITLE_SUFFIX}"
+identify_titles() {
+	# If no titles have been set, locate the single main feature on disc
+	if [ ${#TITLES[@]} -eq 0 ]
+	then
+		makemkvcon -r info dev:${DEVICE} 1> "/tmp/${MEDIA}.nfo" && \
+		TITLES[0]=`blutit ${BLUTIT_OPTS[@]} "/tmp/${MEDIA}.nfo"`
+	fi
+}
 
-	check_fs "$p" || return 1
-	mkdir -p "$d" || return 1
-
+extract_titles() {
 	for t in ${TITLES[@]}
 	do
-		if [ $t -ge 0 ]
-		then
-			run_encoder "--title $t" "${d}/${f}.${t}.mkv" "$p"
-		else
-			run_encoder '--main-feature' "${d}/${f}.mkv" "$p"
-		fi
+		makemkvcon mkv dev:${DEVICE} "${t}" "$1"
 	done
 }
 
-run_cdrom() {
+rip_audio() {
 	local p="/mnt/${DEST_DIR}"
 
 	check_fs "$p" || return 1
@@ -76,42 +67,36 @@ run_cdrom() {
 		 && chown -R ${USR}:${GRP} "${p}"
 }
 
-find_mkv() {
-	find "$1" -xdev -maxdepth 1 -type f -name '*.mkv'
-}
-
-locate_title() {
-	# If a preferred title has been set in the config, use it
-	if [ ${TITLES[0]} -ge 0 ]
-	then
-		echo ${TITLES[0]}
-		return
-	fi
-
-	# Gather information about the disc in the drive
-	[ $NO_BLURAY_DISCOVER -eq 1 ] || \
-	makemkvcon -r info dev:${DEVICE} > "/tmp/${MEDIA}.nfo" 2>&1
-
-	blutit ${BLUTIT_OPTS[@]} "/tmp/${MEDIA}.nfo"
-}
-
-run_bluray() {
+rip_video() {
 	local p="/mnt/${DEST_DIR}"
-	local d="`echo ${p}/${CATEGORY}/${TITLE:0:1}/${TITLE} | tr A-Z a-z`"
-	local f="${TITLE_PREFIX}`echo ${TITLE} | tr A-Z a-z`${TITLE_SUFFIX}.mkv"
+	local q="/mnt/${DEST_DIR}/queue"
 
 	check_fs "$p" || return 1
-	mkdir -p "$d" || return 1
+	mkdir -p "$q" || return 1
+	identify_titles || return 1
+	extract_titles "$q" || return 1
 
-	ttl=`locate_title`
-	[ "x${ttl}" = "x" ] && return 1
+	i=0
+	for x in `ls -tr1 "$q"`
+	do
+		name="`echo $x | sed -r 's/_t[0-9]+.mkv$//' | tr A-Z a-z`"
+		d="`echo ${p}/${CATEGORY}/${name:0:1}/${name}`"
+		f="${TITLE_PREFIX}${name}${TITLE_SUFFIX}"
 
-	makemkvcon mkv dev:${DEVICE} "${ttl%%,*}" "$p" 2>&1 \
-		 && HandBrakeCLI "${BLURAY_ENCODER_OPTS[@]}" \
-			-i "`find_mkv $p`" -o "$d/$f" 2>&1 \
-		 && rm -f "`find_mkv $p`" \
-		 && chown -R ${USR}:${GRP} "${p}" \
-		 && echo "$d/$f" >> "${p}/${MEDIA}-rips.txt"
+		if [ $i -gt 0 ]
+		then
+			e="-${i}.mkv"
+		else
+			e=".mkv"
+		fi
+
+		mkdir -p "${d}" && run_encoder "${q}/${x}" "${d}/${f}${e}" || continue
+		echo "${d}/${f}${e}" >> "${p}/${MEDIA}-rips.txt"
+		rm "${q}/${x}"
+		let i="i + 1"
+	done
+
+	chown -R ${USR}:${GRP} "${p}/${CATEGORY}"
 }
 
 sleep 2
@@ -122,16 +107,16 @@ then
 	DEST_DIR=video
 	(
 	generic_mount || exit 1
-	prologue && run_bluray && generic_umount && epilogue
-	) > /tmp/bluray-rip.${ME} 2>&1 &
+	prologue && rip_video && generic_umount && epilogue
+	) > /tmp/${MEDIA}-rip.${ME} 2>&1
 elif [ "$ID_CDROM_MEDIA_DVD" = "1" ]
 then
 	MEDIA=dvd
 	DEST_DIR=video
 	(
 	generic_mount || exit 1
-	prologue && run_dvd && generic_umount && epilogue
-	) > /tmp/dvd-rip.${ME} 2>&1 &
+	prologue && rip_video && generic_umount && epilogue
+	) > /tmp/${MEDIA}-rip.${ME} 2>&1
 elif [ "$ID_CDROM_MEDIA_CD" = "1" ]
 then
 	NO_MOUNT=1
@@ -140,6 +125,6 @@ then
 	DEST_DIR=music
 	(
 	generic_mount || exit 1
-	prologue && run_cdrom && generic_umount && epilogue
-	) > /tmp/cdrom-rip.${ME} 2>&1 &
+	prologue && rip_audio && generic_umount && epilogue
+	) > /tmp/${MEDIA}-rip.${ME} 2>&1
 fi
