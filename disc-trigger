@@ -73,8 +73,8 @@ rip_video() {
 
 	check_fs "$p" || return 1
 	mkdir -p "$q" || return 1
-	identify_titles || return 1
-	extract_titles "$q" || return 1
+	[ -n $SHORT_CIRCUIT ] || identify_titles || return 1
+	[ -n $SHORT_CIRCUIT ] || extract_titles "$q" || return 1
 
 	i=0
 	for x in `ls -tr1 "$q"`
