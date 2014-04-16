@@ -108,7 +108,7 @@ then
 	(
 	generic_mount || exit 1
 	prologue && rip_video && generic_umount && epilogue
-	) > /tmp/${MEDIA}-rip.${ME} 2>&1
+	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
 elif [ "$ID_CDROM_MEDIA_DVD" = "1" ]
 then
 	MEDIA=dvd
@@ -116,7 +116,7 @@ then
 	(
 	generic_mount || exit 1
 	prologue && rip_video && generic_umount && epilogue
-	) > /tmp/${MEDIA}-rip.${ME} 2>&1
+	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
 elif [ "$ID_CDROM_MEDIA_CD" = "1" ]
 then
 	NO_MOUNT=1
@@ -126,5 +126,5 @@ then
 	(
 	generic_mount || exit 1
 	prologue && rip_audio && generic_umount && epilogue
-	) > /tmp/${MEDIA}-rip.${ME} 2>&1
+	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
 fi
