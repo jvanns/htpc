@@ -127,4 +127,14 @@ then
 	generic_mount || exit 1
 	prologue && rip_audio && generic_umount && epilogue
 	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
+elif [ "$SHORT_CIRCUIT" = "1" ]
+then
+	NO_MOUNT=1
+	NO_EJECT=1
+	MEDIA=unknown
+	DEST_DIR=video
+	(
+	generic_mount || exit 1
+	prologue && rip_video && generic_umount && epilogue
+	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
 fi
