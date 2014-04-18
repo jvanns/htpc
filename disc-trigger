@@ -91,6 +91,7 @@ rip_video() {
 		fi
 
 		mkdir -p "${d}" && run_encoder "${q}/${x}" "${d}/${f}${e}" || continue
+		[ -s "${d}/${f}${e}" ] || continue # Double (trivial) check!
 		echo "${d}/${f}${e}" >> "${p}/${MEDIA}-rips.txt"
 		rm "${q}/${x}"
 		let i="i + 1"
