@@ -73,8 +73,8 @@ rip_video() {
 
 	check_fs "$p" || return 1
 	mkdir -p "$q" || return 1
-	[ -n $SHORT_CIRCUIT ] || identify_titles || return 1
-	[ -n $SHORT_CIRCUIT ] || extract_titles "$q" || return 1
+	[ $QUEUE_RUN_ONLY -eq 1 ] || identify_titles || return 1
+	[ $QUEUE_RUN_ONLY -eq 1 ] || extract_titles "$q" || return 1
 
 	i=0
 	for x in `ls -tr1 "$q"`
@@ -127,7 +127,7 @@ then
 	generic_mount || exit 1
 	prologue && rip_audio && generic_umount && epilogue
 	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
-elif [ "$SHORT_CIRCUIT" = "1" ]
+elif [ "$QUEUE_RUN_ONLY" = "1" ]
 then
 	NO_MOUNT=1
 	NO_EJECT=1
