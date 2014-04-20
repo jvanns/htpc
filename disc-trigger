@@ -4,6 +4,7 @@ ME=$$
 MEDIA=
 DEST_DIR=
 DEVICE="$DEVNAME"
+TITLE_NAME="$ID_FS_LABEL" # Media title; usually the film name if a DVD/Bluray
 
 # Configurable variables/parameters etc.
 [ -f /etc/disc-trigger.conf ] && . /etc/disc-trigger.conf
@@ -52,10 +53,15 @@ identify_titles() {
 }
 
 extract_titles() {
+	cd "$1" || return 1
+
 	for t in ${TITLES[@]}
 	do
 		nice -n ${EXTRACT_PRIORITY} makemkvcon mkv dev:${DEVICE} "${t}" "$1"
+		[ $? -eq 0 ] && mv "`ls -t1 *.mkv | head -n1`" "${TITLE_NAME}_t${t}.mkv"
 	done
+
+	cd "$OLDPWD" || return 1
 }
 
 rip_audio() {
