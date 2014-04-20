@@ -24,20 +24,6 @@ def parse_command_line():
                       help="""look for the stream encoded in this language
                               [default: %default]""")
 
-    parser.add_option('-c', '--channels', action='store', type='int',
-                      dest='channels',
-                      metavar='NUMBER',
-                      default=6,
-                      help="""prefer the N-channel audio stream 
-                              [default: %default]""")
-
-    parser.add_option('-a', '--audio', action='store', type='str',
-                      dest='audio',
-                      metavar='AUDIO',
-                      default='DTSHD',
-                      help="""prefer the audio stream encoded in this format
-                              [default: %default]""")
-
     parser.add_option('-s', '--use-size', action='store_true',
                       dest='use_size',
                       default=False,
@@ -83,27 +69,6 @@ def choose_title(current, preferred, options):
     except KeyError:
         pass # Language isn't always present in title info
 
-    # TODO: Continue adding support for stream parsing to obtain the
-    # necessary audio preferences we compare below. For the time being
-    # just return 'choice' now...
-    return choice
-
-    if choice['codec'] != options.audio:
-        choice = preferred
-
-    if int(choice['channels']) != options.channels:
-        choice = preferred
-
-    if choice != preferred:
-        rate, unit = choice['bitrate'].split(' ')
-        s1 = int(rate)
-        size, unit = current['bitrate'].split(' ')
-        s2 = int(rate)
-
-        # Always prefer the higher bitrate
-        if s2 > s1:
-            choice = current
-
     return choice
 
 
@@ -136,12 +101,6 @@ if __name__ == '__main__':
                 ignore = False
             continue
 
-        # TODO: Parse the stream info (SINFO) data too - there
-        # are multiple streams per title. For simplicity however,
-        # start by only inspecting the title info. This should be
-        # sufficient for extracting the correct bluray title off
-        # the disc and onto disk in Matroska format. Parsing the stream 
-        # info would provide us with the perferred audio options etc.
         if tag != 'TINFO':
             continue
 
