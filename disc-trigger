@@ -37,7 +37,7 @@ generic_umount() {
 
 run_encoder() {
 	local -i audio_stream=`audio-info "$1" | audio-prefs ${AUDIO_PREFS_OPTS[@]}`
-	HandBrakeCLI "${HANDBRAKE_OPTS[@]}" \
+	nice -n ${ENCODER_PRIORITY} HandBrakeCLI "${HANDBRAKE_OPTS[@]}" \
 		-a $(($audio_stream + 1)) \
 		-i "$1" -o "$2"
 }
@@ -54,7 +54,7 @@ identify_titles() {
 extract_titles() {
 	for t in ${TITLES[@]}
 	do
-		makemkvcon mkv dev:${DEVICE} "${t}" "$1"
+		nice -n ${EXTRACT_PRIORITY} makemkvcon mkv dev:${DEVICE} "${t}" "$1"
 	done
 }
 
