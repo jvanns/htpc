@@ -125,4 +125,10 @@ if __name__ == '__main__':
         except KeyError:
             pass # We're not interested in this field
 
+    if len(preferred_title) == 0:
+        # Only one title
+        if options.verbose:
+            pprint(current_title, stream=stderr, width=-1)
+        preferred_title = current_title
+
     print preferred_title['title']
