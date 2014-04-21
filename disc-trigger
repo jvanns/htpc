@@ -37,10 +37,9 @@ generic_umount() {
 }
 
 run_encoder() {
-	local -i audio_stream=`audio-info "$1" | audio-prefs ${AUDIO_PREFS_OPTS[@]}`
+	local -a audio_stream=(`audio-info "$1" | audio-prefs ${AUDIO_PREFS_OPTS[@]}`)
 	nice -n ${ENCODER_PRIORITY} HandBrakeCLI "${HANDBRAKE_OPTS[@]}" \
-		-a $(($audio_stream + 1)) \
-		-i "$1" -o "$2"
+		"${audio_stream[@]}" -i "$1" -o "$2"
 }
 
 identify_titles() {
