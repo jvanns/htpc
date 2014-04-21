@@ -133,15 +133,13 @@ if __name__ == '__main__':
         # We expect a format of;
         # format,lang,channels,bit depth,bit rate,audio id, stream id
         csv = l.split(',')
-        csv[3:-1] = [int(x) for x in csv[3:-1]]
-
-        # Sometimes the number of channels may be
-        # split such as 6/7 rather than just 2 or 6
-        if len(csv[2]) == 1:
-            csv[2] = int(csv[2])
-
-        csv[1] = csv[1].lower()
         csv[0] = csv[0].lower()
+        csv[1] = csv[1].lower()
+        for i, v in enumerate(csv[2:]):
+            try:
+                csv[i + 2] = int(v)
+            except ValueError:
+                pass
 
         current_stream = map_keys(keys, csv)
         preferred_stream = choose_stream(current_stream,
