@@ -30,6 +30,12 @@ def parse_command_line():
                       help="""prefer the audio stream encoded in this format
                               [default: %default]""")
 
+    parser.add_option('-k', '--handbrake', action='store_true',
+                      dest='handbrake',
+                      default=False,
+                      help="""write out HandBrakeCLI options instead of ID
+                              [default: %default]""")
+
     parser.add_option('-v', '--verbose', action='store_true',
                       dest='verbose',
                       default=False,
@@ -89,6 +95,16 @@ def map_keys(keys, values):
     return dict(zip(keys, values))
 
 
+def to_hb_codec(codec):
+    names = {
+       'ac-3': 'ac3',
+    }
+    try:
+        return names[codec]
+    except KeyError:
+        return codec
+
+
 if __name__ == '__main__':
     fs = stdin
     keys = (
@@ -133,4 +149,9 @@ if __name__ == '__main__':
         if options.verbose:
             pprint(current_stream, stream=stderr, width=-1)
 
-    print preferred_stream[keys[-2]]
+    if not options.handbrake:
+        print preferred_stream[keys[-2]]
+    else:
+         print '-E copy:%s -a %d' \
+             % (to_hb_codec(preferred_stream[keys[0]]),\
+                preferred_stream[keys[-2]] + 1)
