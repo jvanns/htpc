@@ -139,7 +139,10 @@ if __name__ == '__main__':
             try:
                 csv[i + 2] = int(v)
             except ValueError:
-                pass
+                # Sometimes, a slash denotes an optional
+                # split in the channel configuration;
+                if i == 0:
+                    csv[i + 2] = int(v.split(' ')[-1])
 
         current_stream = map_keys(keys, csv)
         preferred_stream = choose_stream(current_stream,
