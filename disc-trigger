@@ -56,7 +56,8 @@ extract_titles() {
 
 	for t in ${TITLES[@]}
 	do
-		nice -n ${EXTRACT_PRIORITY} makemkvcon mkv dev:${DEVICE} "${t}" "$1"
+		nice -n ${EXTRACT_PRIORITY} \
+		makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv dev:${DEVICE} "${t}" "$1"
 		[ $? -eq 0 ] && mv "`ls -t1 *.mkv | head -n1`" "${TITLE_NAME}_t${t}.mkv"
 	done
 
