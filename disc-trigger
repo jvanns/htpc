@@ -85,7 +85,7 @@ rip_video() {
 	i=0
 	for x in `ls -tr1 "$q"`
 	do
-		name="`echo $x | sed -r 's/_t[0-9]+.mkv$//' | tr A-Z a-z`"
+		name="`echo $x | sed -r 's/_+t[0-9]+.mkv$//' | tr A-Z a-z`"
 		d="`echo ${p}/${CATEGORY}/${name:0:1}/${name}`"
 		f="${TITLE_PREFIX}${name}${TITLE_SUFFIX}"
 
