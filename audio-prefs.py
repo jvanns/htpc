@@ -50,8 +50,15 @@ def choose_stream(current, preferred, options):
     if len(preferred) == 0:
         return current
 
-    cur_score = 0
-    pref_score = 0
+    if 'score' in current:
+        cur_score = current['score']
+    else:
+        cur_score = 0
+
+    if 'score' in preferred:
+        pref_score = preferred['score']
+    else:
+        pref_score = 0
 
     key = 'lang'
     if current[key] == getattr(options, key):
