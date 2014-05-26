@@ -57,8 +57,8 @@ extract_titles() {
 	for t in ${TITLES[@]}
 	do
 		nice -n ${EXTRACT_PRIORITY} \
-		makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv dev:${DEVICE} "${t}" "$1"
-		[ $? -eq 0 ] && mv "`ls -t1 *.mkv | head -n1`" "${TITLE_NAME}_t${t}.mkv"
+		makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv dev:${DEVICE} "${t}" "$1" \
+      | grep '^1 titles saved$' && mv "`ls -t1 *.mkv | head -n1`" "${TITLE_NAME}_t${t}.mkv"
 	done
 
 	cd "$OLDPWD" || return 1
