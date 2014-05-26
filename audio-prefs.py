@@ -73,9 +73,9 @@ def choose_stream(current, preferred, options):
         pref_score += 1
 
     key = 'channels'
-    if current[key] == getattr(options, key):
+    if current[key] >= getattr(options, key):
         cur_score += 1
-    if preferred[key] == getattr(options, key):
+    if preferred[key] >= getattr(options, key):
         pref_score += 1
 
     if cur_score == pref_score:
@@ -144,6 +144,8 @@ if __name__ == '__main__':
         csv[1] = csv[1].lower()
         for i, v in enumerate(csv[2:]):
             try:
+                if len(v) == 0:
+                    v = '0'
                 csv[i + 2] = int(v)
             except ValueError:
                 # Sometimes, a slash denotes an optional
