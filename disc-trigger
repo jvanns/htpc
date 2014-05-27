@@ -52,16 +52,12 @@ identify_titles() {
 }
 
 extract_titles() {
-	cd "$1" || return 1
-
 	for t in ${TITLES[@]}
 	do
+		mkdir -p "$1/$t" || return 1
 		nice -n ${EXTRACT_PRIORITY} \
-		makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv dev:${DEVICE} "${t}" "$1" \
-      | grep '^1 titles saved$' && mv "`ls -t1 *.mkv | head -n1`" "${TITLE_NAME}_t${t}.mkv"
+		makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv dev:${DEVICE} "${t}" "$1/$t"
 	done
-
-	cd "$OLDPWD" || return 1
 }
 
 rip_audio() {
@@ -76,32 +72,26 @@ rip_audio() {
 rip_video() {
 	local p="/mnt/${DEST_DIR}"
 	local q="/mnt/${DEST_DIR}/queue"
+	local name="`echo $TITLE_NAME | tr A-Z a-z`"
 
 	check_fs "$p" || return 1
 	mkdir -p "$q" || return 1
 	[ $QUEUE_RUN_ONLY -eq 1 ] || identify_titles || return 1
 	[ $QUEUE_RUN_ONLY -eq 1 ] || extract_titles "$q" || return 1
 
-	i=0
-	for x in `ls -tr1 "$q"`
+	cd "$q"
+	for x in `ls -tr1 */*.mkv`
 	do
-		name="`echo $x | sed -r 's/_+t[0-9]+.mkv$//' | tr A-Z a-z`"
 		d="`echo ${p}/${CATEGORY}/${name:0:1}/${name}`"
 		f="${TITLE_PREFIX}${name}${TITLE_SUFFIX}"
+		e="-${x%%/*}.mkv"
 
-		if [ $i -gt 0 ]
-		then
-			e="-${i}.mkv"
-		else
-			e=".mkv"
-		fi
-
-		mkdir -p "${d}" && run_encoder "${q}/${x}" "${d}/${f}${e}" || continue
-		[ -s "${d}/${f}${e}" ] || continue # Double (trivial) check!
+		mkdir -p "${d}" && run_encoder "${q}/${x}" "${d}/${f}${e}" || return 1
+		[ -s "${d}/${f}${e}" ] || return 1 # Double (trivial) check!
 		echo "${d}/${f}${e}" >> "${p}/${MEDIA}-rips.txt"
-		rm "${q}/${x}"
-		let i="i + 1"
+		rm "${x}" && rmdir "${x%%/*}"
 	done
+	cd "$OLDPWD"
 
 	chown -R ${USR}:${GRP} "${p}/${CATEGORY}"
 }
