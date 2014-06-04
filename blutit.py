@@ -81,11 +81,11 @@ if __name__ == '__main__':
     fs = stdin
     ignore = True
     preferred_title = {}
-    current_title = {'title': 0}
+    current_title = {'index': 0}
     exp = re.compile(r'(^[^:]+):(.*)$')
     section_mapper = {1: 'type', 2: 'name', 5: 'codec',
                       8: 'chapters', 9: 'duration', 10: 'size',
-                      13: 'bitrate', 14: 'channels', 29: 'lang'}
+                      13: 'bitrate', 14: 'channels', 24: 'title', 29: 'lang'}
     reverse_mapper = dict((v, k) for k, v in section_mapper.iteritems())
 
     options, arguments = parse_command_line()
@@ -109,13 +109,13 @@ if __name__ == '__main__':
         info[0:-1] = [int(x) for x in info[0:-1]]
          
         new_tid = info[0]
-        old_tid = current_title['title']
+        old_tid = current_title['index']
         if old_tid != new_tid:
             preferred_title = choose_title(current_title,\
                                            preferred_title, options)
             if options.verbose:
                 pprint(current_title, stream=stderr, width=-1)
-            current_title = {'title': new_tid} # Start a new record
+            current_title = {'index': new_tid} # Start a new record
 
         if info[2] != 0:
             continue
@@ -131,4 +131,4 @@ if __name__ == '__main__':
             pprint(current_title, stream=stderr, width=-1)
         preferred_title = current_title
 
-    print preferred_title['title']
+    print preferred_title['index']
