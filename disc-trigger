@@ -84,7 +84,7 @@ rip_video() {
 	do
 		d="`echo ${p}/${CATEGORY}/${name:0:1}/${name}`"
 		f="${TITLE_PREFIX}${name}${TITLE_SUFFIX}"
-		e="-${x%%/*}.mkv"
+		e=".${x%%/*}.mkv"
 
 		mkdir -p "${d}" && run_encoder "${q}/${x}" "${d}/${f}${e}" || return 1
 		[ -s "${d}/${f}${e}" ] || return 1 # Double (trivial) check!
