@@ -46,7 +46,7 @@ identify_titles() {
 	# If no titles have been set, locate the single main feature on disc
 	if [ ${#TITLES[@]} -eq 0 ]
 	then
-		makemkvcon -r info dev:${DEVICE} 1> "/tmp/${MEDIA}.nfo" && \
+		makemkvcon "${MAKEMKVCON_OPTS[@]}" -r info dev:${DEVICE} 1> "/tmp/${MEDIA}.nfo" && \
 		TITLES[0]=`blutit ${BLUTIT_OPTS[@]} "/tmp/${MEDIA}.nfo"`
 	fi
 }
