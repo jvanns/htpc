@@ -76,9 +76,11 @@ rip_video() {
 
 	check_fs "$p" || return 1
 	mkdir -p "$q" || return 1
+
 	[ $QUEUE_RUN_ONLY -eq 1 ] || identify_titles || return 1
 	[ $QUEUE_RUN_ONLY -eq 1 ] || extract_titles "$q" || return 1
 	[ $QUEUE_RUN_ONLY -eq 1 ] || generic_umount || return 1
+	[ $DISC_RIP_ONLY -eq 1 ] && return 0
 
 	cd "$q"
 	for x in `ls -tr1 */*.mkv`
