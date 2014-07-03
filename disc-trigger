@@ -78,6 +78,7 @@ rip_video() {
 	mkdir -p "$q" || return 1
 	[ $QUEUE_RUN_ONLY -eq 1 ] || identify_titles || return 1
 	[ $QUEUE_RUN_ONLY -eq 1 ] || extract_titles "$q" || return 1
+	[ $QUEUE_RUN_ONLY -eq 1 ] || generic_umount || return 1
 
 	cd "$q"
 	for x in `ls -tr1 */*.mkv`
@@ -104,7 +105,7 @@ then
 	DEST_DIR=video
 	(
 	generic_mount || exit 1
-	prologue && rip_video && generic_umount && epilogue
+	prologue && rip_video && epilogue
 	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
 elif [ "$ID_CDROM_MEDIA_DVD" = "1" ]
 then
@@ -112,7 +113,7 @@ then
 	DEST_DIR=video
 	(
 	generic_mount || exit 1
-	prologue && rip_video && generic_umount && epilogue
+	prologue && rip_video && epilogue
 	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
 elif [ "$ID_CDROM_MEDIA_CD" = "1" ]
 then
@@ -122,7 +123,7 @@ then
 	DEST_DIR=music
 	(
 	generic_mount || exit 1
-	prologue && rip_audio && generic_umount && epilogue
+	prologue && rip_audio && pilogue
 	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
 elif [ "$QUEUE_RUN_ONLY" = "1" ]
 then
@@ -132,6 +133,7 @@ then
 	DEST_DIR=video
 	(
 	generic_mount || exit 1
-	prologue && rip_video && generic_umount && epilogue
+	prologue && rip_video && epilogue
 	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
 fi
+
