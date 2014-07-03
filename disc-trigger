@@ -123,7 +123,7 @@ then
 	DEST_DIR=music
 	(
 	generic_mount || exit 1
-	prologue && rip_audio && pilogue
+	prologue && rip_audio && epilogue
 	) > /tmp/${MEDIA}-rip.${ME} 2>&1 &
 elif [ "$QUEUE_RUN_ONLY" = "1" ]
 then
