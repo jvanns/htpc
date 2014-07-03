@@ -80,6 +80,7 @@ def lines(file_stream):
 if __name__ == '__main__':
     fs = stdin
     ignore = True
+    all_titles = []
     preferred_title = {}
     current_title = {'index': 0}
     exp = re.compile(r'(^[^:]+):(.*)$')
@@ -111,10 +112,9 @@ if __name__ == '__main__':
         new_tid = info[0]
         old_tid = current_title['index']
         if old_tid != new_tid:
+            all_titles.append(current_title)
             preferred_title = choose_title(current_title,\
                                            preferred_title, options)
-            if options.verbose:
-                pprint(current_title, stream=stderr, width=-1)
             current_title = {'index': new_tid} # Start a new record
 
         if info[2] != 0:
@@ -127,8 +127,11 @@ if __name__ == '__main__':
 
     if len(preferred_title) == 0:
         # Only one title
-        if options.verbose:
-            pprint(current_title, stream=stderr, width=-1)
+        all_titles.append(current_title)
         preferred_title = current_title
 
+    if options.verbose:
+        for t in sorted(all_titles, key=lambda k: k['duration'], reverse=1):
+            pprint(t, stream=stderr, width=-1)
     print preferred_title['index']
+
