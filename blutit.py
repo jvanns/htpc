@@ -125,10 +125,8 @@ if __name__ == '__main__':
         except KeyError:
             pass # We're not interested in this field
 
-    if len(preferred_title) == 0:
-        # Only one title
-        all_titles.append(current_title)
-        preferred_title = current_title
+    all_titles.append(current_title)
+    preferred_title = current_title
 
     if options.verbose:
         for t in sorted(all_titles, key=lambda k: k['duration'], reverse=1):
