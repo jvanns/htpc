@@ -6,11 +6,14 @@ install:
 	install -CD -o root -g root -m 0755 audio-prefs.py $(DESTDIR)/usr/local/bin/audio-prefs
 	install -CD -o root -g root -m 0755 audio-info.sh $(DESTDIR)/usr/local/bin/audio-info
 	install -CD -o root -g root -m 0755 backup.sh $(DESTDIR)/usr/local/sbin/backup
-	install -C -o root -g root -m 0755 disc-trigger $(DESTDIR)/usr/local/sbin/
-	install -C -o root -g root -m 0755 disc-trigger-prologue $(DESTDIR)/usr/local/sbin/
-	install -C -o root -g root -m 0755 disc-trigger-epilogue $(DESTDIR)/usr/local/sbin/
+	install -C -o root -g root -m 0755 disc-trg-q $(DESTDIR)/usr/local/sbin/
+	install -C -o root -g root -m 0755 disc-trg-q-prologue $(DESTDIR)/usr/local/sbin/
+	install -C -o root -g root -m 0755 disc-trg-q-epilogue $(DESTDIR)/usr/local/sbin/
+	install -C -o root -g root -m 0755 disc-trg-dq $(DESTDIR)/usr/local/sbin/
+	install -C -o root -g root -m 0755 disc-trg-dq-prologue $(DESTDIR)/usr/local/sbin/
+	install -C -o root -g root -m 0755 disc-trg-dq-epilogue $(DESTDIR)/usr/local/sbin/
 	install -CD -o root -g root -m 0644 75-optical-drive.rules $(DESTDIR)/etc/udev/rules.d/75-optical-drive.rules
-	install -C -o root -g root -m 0644 disc-trigger.conf $(DESTDIR)/etc
+	install -C -o root -g root -m 0644 disc-trg.conf $(DESTDIR)/etc
 	install -C -o root -g root -m 0644 abcde.conf $(DESTDIR)/etc
 
 release:
