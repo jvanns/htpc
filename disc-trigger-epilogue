@@ -1,4 +1,0 @@
-#!/bin/bash
-#service xbmc start
-#poweroff
-exit 0
