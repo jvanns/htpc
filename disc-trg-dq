@@ -1,0 +1,58 @@
+#!/bin/bash
+
+ME=$$
+PRG=`basename $0`
+
+# Configurable variables/parameters etc.
+[ -f /etc/disc-trg.conf ] && . /etc/disc-trg.conf
+
+check_fs() {
+	local -r v=`grep -c " ${1} " /proc/mounts`
+	[ $v = "1" ] && return 0 || return 1
+}
+
+run_encoder() {
+	local -a audio_stream=(`audio-info "$1" | audio-prefs ${AUDIO_PREFS_OPTS[@]}`)
+	nice -n ${ENCODER_PRIORITY} HandBrakeCLI "${HANDBRAKE_OPTS[@]}" \
+		"${audio_stream[@]}" -i "$1" -o "$2"
+}
+
+queue_run() {
+	local name="${1##/*}"
+	local p="${VIDEO_MNT}"
+
+	check_fs "$p" || return 1
+
+	cd "$1"
+	for x in `ls -tr1 */*.q`
+	do
+		e=".${x%%/*}.mkv" # Episode
+		c="`echo ${x##*/} | sed 's/\.q$//'`" # Category
+		d="`echo ${p}/${c}/${name:0:1}/${name}`" # Directory
+		f="${TITLE_PREFIX}${name}${TITLE_SUFFIX}" # File name (target)
+
+		x="`ls -tr1 */*.mkv`" # Reassign
+
+		mkdir -p "${d}" && run_encoder "${q}/${x}" "${d}/${f}${e}" || return 1
+		[ -s "${d}/${f}${e}" ] || return 1 # Double (trivial) check!
+		rm "${x%%/*}"/*.{q,mkv} && rmdir "${x%%/*}"
+	done
+	rmdir "$1"
+}
+
+queue_runner() {
+	local q="${QUEUE_DIR}"
+
+	while [ `stat -c %h "${QUEUE_DIR}"` -gt 2 ]
+	do
+		for d in "`find $q -maxdepth 1 -type d \! -path $q`"
+		do
+			queue_run "$d" || return 1
+		done
+		sleep 5
+	done
+}
+
+(
+prologue "$PRG" && queue_runner && epilogue "$PRG"
+) > ${TMP}/${PRG}.${ME} 2>&1 &

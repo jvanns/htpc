@@ -1,0 +1,94 @@
+#!/bin/bash
+
+ME=$$
+MEDIA=
+PRG=`basename $0`
+DEVICE="$DEVNAME"
+
+# Configurable variables/parameters etc.
+[ -f /etc/disc-trg.conf ] && . /etc/disc-trg.conf
+
+check_fs() {
+	local -r v=`grep -c " ${1} " /proc/mounts`
+	[ $v = "1" ] && return 0 || return 1
+}
+
+generic_mount() {
+	local -r u=`id -u ${USR}`
+	local -r g=`id -g ${GRP}`
+
+	[ ${NO_MOUNT} -eq 1 ] && return 0
+
+	check_fs "/media/${MEDIA}" && return 1
+	mount -o ro,nosuid,nodev,user,umask=0077,uid=${u},gid=${g} \
+		${DEVICE} /media/${MEDIA}
+
+	return $?
+}
+
+generic_umount() {
+	[ ${NO_EJECT} -eq 1 ] && return 0
+
+	check_fs "/media/${MEDIA}" && umount "/media/${MEDIA}"
+	eject "${DEVICE}"
+
+	return $?
+}
+
+identify_titles() {
+	local t="${TMP}/${MEDIA}.nfo"
+
+	# If no titles have been set, locate the single main feature on disc
+	if [ ${#TITLES[@]} -eq 0 ]
+	then
+		makemkvcon "${MAKEMKVCON_OPTS[@]}" -r info dev:${DEVICE} 1> "$t" && \
+		TITLES[0]=`blutit ${BLUTIT_OPTS[@]} "$t"`
+	fi
+}
+
+extract_titles() {
+	local p="${QUEUE_DIR}/${ID_FS_LABEL}"
+
+	for t in ${TITLES[@]}
+	do
+		mkdir -p "$p/$t" || return 1
+		nice -n ${EXTRACT_PRIORITY} \
+		makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv dev:${DEVICE} "${t}" "$p/$t" && \
+		touch "$p/$t/${CATEGORY}.q"
+	done
+}
+
+rip_audio() {
+	local p="$MUSIC_MNT"
+
+	check_fs "$p" && abcde -w 'Ripped with abcde' -N -d "${DEVICE}"
+}
+
+rip_video() {
+	local p="$VIDEO_MNT"
+
+	check_fs "$p" && identify_titles && extract_titles && generic_umount
+}
+
+sleep 2
+
+if [ "$ID_CDROM_MEDIA_BD" = "1" ]
+then
+	MEDIA=bluray
+	alias rip=rip_video
+elif [ "$ID_CDROM_MEDIA_DVD" = "1" ]
+then
+	MEDIA=dvd
+	alias rip=rip_video
+elif [ "$ID_CDROM_MEDIA_CD" = "1" ]
+then
+	NO_MOUNT=1
+	NO_EJECT=1
+	MEDIA=cdrom
+	alias rip=rip_audio
+fi
+
+(
+generic_mount || exit 1
+prologue "$PRG" && rip && epilogue "$PRG"
+) > ${TMP}/${PRG}.${ME} 2>&1 &
