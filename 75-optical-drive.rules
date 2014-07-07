@@ -1,2 +1,2 @@
 # ATAPI_iHOS104 (pci-0000:00:14.1-scsi-0:0:1:0)
-SUBSYSTEM=="block", KERNEL=="sr0", ACTION=="change", ENV{ID_CDROM}=="?*", RUN+="/usr/bin/nohup /usr/bin/setsid /usr/local/sbin/disc-trigger", ENV{GENERATED}="1"
+SUBSYSTEM=="block", KERNEL=="sr0", ACTION=="change", ENV{ID_CDROM}=="?*", RUN+="/usr/bin/nohup /usr/bin/setsid /usr/local/sbin/dsc-trg-q", ENV{GENERATED}="1"
