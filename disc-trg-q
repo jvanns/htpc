@@ -8,11 +8,6 @@ DEVICE="$DEVNAME"
 # Configurable variables/parameters etc.
 [ -f /etc/disc-trg.conf ] && . /etc/disc-trg.conf
 
-check_fs() {
-	local -r v=`grep -c " ${1} " /proc/mounts`
-	[ $v = "1" ] && return 0 || return 1
-}
-
 generic_mount() {
 	local -r u=`id -u ${USR}`
 	local -r g=`id -g ${GRP}`

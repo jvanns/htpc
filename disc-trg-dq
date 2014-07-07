@@ -6,11 +6,6 @@ PRG=`basename $0`
 # Configurable variables/parameters etc.
 [ -f /etc/disc-trg.conf ] && . /etc/disc-trg.conf
 
-check_fs() {
-	local -r v=`grep -c " ${1} " /proc/mounts`
-	[ $v = "1" ] && return 0 || return 1
-}
-
 run_encoder() {
 	local -a audio_stream=(`audio-info "$1" | audio-prefs ${AUDIO_PREFS_OPTS[@]}`)
 	nice -n ${ENCODER_PRIORITY} HandBrakeCLI "${HANDBRAKE_OPTS[@]}" \
