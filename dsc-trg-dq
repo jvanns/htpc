@@ -4,7 +4,7 @@ ME=$$
 PRG=`basename $0`
 
 # Configurable variables/parameters etc.
-[ -f /etc/disc-trg.conf ] && . /etc/disc-trg.conf
+[ -f /etc/dsc-trg.conf ] && . /etc/dsc-trg.conf
 
 run_encoder() {
 	local -a audio_stream=(`audio-info "$1" | audio-prefs ${AUDIO_PREFS_OPTS[@]}`)

@@ -6,7 +6,7 @@ PRG=`basename $0`
 DEVICE="$DEVNAME"
 
 # Configurable variables/parameters etc.
-[ -f /etc/disc-trg.conf ] && . /etc/disc-trg.conf
+[ -f /etc/dsc-trg.conf ] && . /etc/dsc-trg.conf
 
 generic_mount() {
 	local -r u=`id -u ${USR}`
