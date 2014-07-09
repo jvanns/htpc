@@ -28,7 +28,7 @@ queue_run() {
 
 		x="`ls -tr1 */*.mkv`" # Reassign
 
-		mkdir -p "${d}" && run_encoder "${q}/${x}" "${d}/${f}${e}" || return 1
+		mkdir -p "${d}" && run_encoder "${1}/${x}" "${d}/${f}${e}" || return 1
 		[ -s "${d}/${f}${e}" ] || return 1 # Double (trivial) check!
 		rm "${x%%/*}"/*.{q,mkv} && rmdir "${x%%/*}"
 	done
