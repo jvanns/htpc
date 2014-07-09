@@ -13,7 +13,7 @@ run_encoder() {
 }
 
 queue_run() {
-	local name="${1##/*}"
+	local name="${1##*/}"
 	local p="${VIDEO_MNT}"
 
 	check_fs "$p" || return 1
