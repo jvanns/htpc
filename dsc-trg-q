@@ -83,7 +83,10 @@ then
 	alias rip=rip_audio
 fi
 
+export MEDIA NO_MOUNT NO_EJECT
+
 (
 generic_mount || exit 1
 prologue "$PRG" && rip && epilogue "$PRG"
 ) > ${TMP}/${PRG}.${ME} 2>&1 &
+
