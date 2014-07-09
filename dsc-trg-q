@@ -70,23 +70,25 @@ sleep 2
 if [ "$ID_CDROM_MEDIA_BD" = "1" ]
 then
 	MEDIA=bluray
-	RIPPER=rip_video
+   (
+   generic_mount || exit 1
+   prologue "$PRG" && rip_video && epilogue "$PRG"
+   ) > ${TMP}/${PRG}.${ME} 2>&1 &
 elif [ "$ID_CDROM_MEDIA_DVD" = "1" ]
 then
 	MEDIA=dvd
-	RIPPER=rip_video
+   (
+   generic_mount || exit 1
+   prologue "$PRG" && rip_video && epilogue "$PRG"
+   ) > ${TMP}/${PRG}.${ME} 2>&1 &
 elif [ "$ID_CDROM_MEDIA_CD" = "1" ]
 then
 	NO_MOUNT=1
 	NO_EJECT=1
 	MEDIA=cdrom
-	RIPPER=rip_audio
+   (
+   generic_mount || exit 1
+   prologue "$PRG" && rip_audio && epilogue "$PRG"
+   ) > ${TMP}/${PRG}.${ME} 2>&1 &
 fi
-
-export MEDIA RIPPER NO_MOUNT NO_EJECT
-
-(
-generic_mount || exit 1
-prologue "$PRG" && $RIPPER && epilogue "$PRG"
-) > ${TMP}/${PRG}.${ME} 2>&1 &
 
