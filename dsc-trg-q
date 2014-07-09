@@ -70,23 +70,23 @@ sleep 2
 if [ "$ID_CDROM_MEDIA_BD" = "1" ]
 then
 	MEDIA=bluray
-	alias rip=rip_video
+	RIPPER=rip_video
 elif [ "$ID_CDROM_MEDIA_DVD" = "1" ]
 then
 	MEDIA=dvd
-	alias rip=rip_video
+	RIPPER=rip_video
 elif [ "$ID_CDROM_MEDIA_CD" = "1" ]
 then
 	NO_MOUNT=1
 	NO_EJECT=1
 	MEDIA=cdrom
-	alias rip=rip_audio
+	RIPPER=rip_audio
 fi
 
-export MEDIA NO_MOUNT NO_EJECT
+export MEDIA RIPPER NO_MOUNT NO_EJECT
 
 (
 generic_mount || exit 1
-prologue "$PRG" && rip && epilogue "$PRG"
+prologue "$PRG" && $RIPPER && epilogue "$PRG"
 ) > ${TMP}/${PRG}.${ME} 2>&1 &
 
