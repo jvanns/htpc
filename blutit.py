@@ -185,6 +185,9 @@ if __name__ == '__main__':
     else:
         preferred_titles = [pick_preferred(all_titles, options)]
 
+    if len(preferred_titles) == 0:
+        sys.exit(1)
+
     if options.verbose:
         for t in sorted(all_titles, key=lambda k: k['duration'], reverse=1):
             print_title(t, sys.stderr)
@@ -195,4 +198,5 @@ if __name__ == '__main__':
         else:
             print t['index'],
     print
+    sys.exit(0)
 
