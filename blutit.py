@@ -123,11 +123,8 @@ def detect_episodes(all_titles, options):
 
 
 def print_title(title, stream):
-    k, v = zip(*sorted(title.iteritems(), key=lambda (k, v): k))
-    print >> stream, '\t'.join(k)
-    print >> stream, v[0],
-    for i in v[1:]:
-        print >> stream, '\t' + str(i),
+    for k, v in sorted(title.iteritems(), key=lambda (k, v): k):
+        print >> stream, k + ':%s' % (' ' * (16 - (len(k) + 1))), v
     print >> stream
 
 
