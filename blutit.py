@@ -39,6 +39,14 @@ def parse_command_line():
     return parser.parse_args()
 
 
+def augment_title(title):
+    h, m, s = (int(n) for n in title['duration'].split(':'))
+    title['raw_duration'] = (h * 3600) + (60 * m) + s
+
+    size, unit = title['size'].split(' ')
+    title['raw_size'] = normaliser[unit](float(size))
+
+
 def choose_title(current, preferred, options):
     assert len(current) > 0
     if len(preferred) == 0:
@@ -47,25 +55,10 @@ def choose_title(current, preferred, options):
     choice = preferred
 
     if options.use_size:
-        size, unit = current['size'].split(' ')
-        s1 = normaliser[unit](float(size))
-        current['raw_size'] = s1
-
-        size, unit = preferred['size'].split(' ')
-        s2 = normaliser[unit](float(size))
-        preferred['raw_size'] = s2
-
-        if s1 > s2:
+        if current['raw_size'] > preferred['raw_size']:
             choice = current
     else:
-        h, m, s = (int(n) for n in current['duration'].split(':'))
-        d1 = (h * 3600) + (60 * m) + s
-        current['raw_duration'] = d1
-        h, m, s = (int(n) for n in preferred['duration'].split(':'))
-        d2 = (h * 3600) + (60 * m) + s
-        preferred['raw_duration'] = d2
-
-        if d1 > d2:
+        if current['raw_duration'] > preferred['raw_duration']:
             choice = current
 
     try:
@@ -75,6 +68,13 @@ def choose_title(current, preferred, options):
         pass # Language isn't always present in title info
 
     return choice
+
+
+def pick_preferred(all_titles, options):
+    preferred_title = {}
+    for t in all_titles:
+        preferred_title = choose_title(t, preferred_title, options)
+    return preferred_title
 
 
 def lines(file_stream):
@@ -118,7 +118,6 @@ if __name__ == '__main__':
     fs = stdin
     ignore = True
     all_titles = []
-    preferred_title = {}
     current_title = {'index': 0}
     exp = re.compile(r'(^[^:]+):(.*)$')
     section_mapper = {1: 'type', 2: 'name', 5: 'codec',
@@ -149,9 +148,8 @@ if __name__ == '__main__':
         new_tid = info[0]
         old_tid = current_title['index']
         if old_tid != new_tid:
+            augment_title(current_title)
             all_titles.append(current_title)
-            preferred_title = choose_title(current_title,\
-                                           preferred_title, options)
             current_title = {'index': new_tid} # Start a new record
 
         if info[2] != 0:
@@ -162,9 +160,9 @@ if __name__ == '__main__':
         except KeyError:
             pass # We're not interested in this field
 
+    augment_title(current_title)
     all_titles.append(current_title)
-    if len(all_titles) == 1:
-        preferred_title = current_title
+    preferred_title = pick_preferred(all_titles, options)
 
     if options.verbose:
         for t in sorted(all_titles, key=lambda k: k['duration'], reverse=1):
