@@ -30,6 +30,12 @@ def parse_command_line():
                       help="""instead of duration, use stream size as the key
                               [default: %default]""")
 
+    parser.add_option('-e', '--episodes', action='store_true',
+                      dest='episodes',
+                      default=False,
+                      help="""detect a set of episodes instead of main feature
+                              [default: %default]""")
+
     parser.add_option('-v', '--verbose', action='store_true',
                       dest='verbose',
                       default=False,
@@ -162,10 +168,20 @@ if __name__ == '__main__':
 
     augment_title(current_title)
     all_titles.append(current_title)
-    preferred_title = pick_preferred(all_titles, options)
+
+    if options.episodes:
+        preferred_titles = detect_episodes(all_titles)
+    else:
+        preferred_titles = [pick_preferred(all_titles, options)]
 
     if options.verbose:
         for t in sorted(all_titles, key=lambda k: k['duration'], reverse=1):
             print_title(t)
-    print preferred_title['index']
+
+    for i, t in enumerate(preferred_titles):
+        if i > 0:
+            print ' %d' % (t['index']),
+        else:
+            print t['index'],
+    print
 
