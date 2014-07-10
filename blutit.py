@@ -82,7 +82,7 @@ def lines(file_stream):
 
 
 def detect_episodes(all_titles):
-    key = 'duration'
+    key = 'raw_duration'
     lengths = map(lambda x: x[key], all_titles)
     average = sum(lengths) / float(len(lengths))
 
