@@ -76,6 +76,12 @@ def lines(file_stream):
         yield l.strip()
 
 
+def detect_episodes(all_titles):
+    key = 'duration'
+    lengths = map(lambda x: x[key], all_titles)
+    average = sum(lengths) / float(len(lengths))
+
+
 def print_title(title):
     k, v = zip(*sorted(title.iteritems(), key=lambda (k, v): k))
     print '\t'.join(k)
