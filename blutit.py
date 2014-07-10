@@ -3,6 +3,7 @@
 # Small tool to correctly identify the main feature on a bluray disc
 
 import re
+import sys
 from math import sqrt
 from optparse import OptionParser
 from sys import exit, stderr, stdin
@@ -97,16 +98,26 @@ def stddev(a):
     return sqrt(sum((x - m)**2 for x in a) / float(len(a)))
 
 
-def detect_episodes(all_titles):
+def detect_episodes(all_titles, options):
     lengths = map(lambda x: x['raw_duration'], all_titles)
     s = stddev(lengths) # Standard deviation of average duration
     m = mean(lengths) # Average duration
+
+    if options.verbose:
+        print >> sys.stderr, 'Mean duration:      %.2f seconds' % (m)
+        print >> sys.stderr, 'Standard deviation: %.2f seconds' % (s)
 
     episodes = []
     for t in all_titles:
         duration = t['raw_duration']
         if duration - s >= m and duration +s <= m:
             episodes.append(t)
+            if options.verbose:
+                print >> sys.stderr, 'Selected title %d: %d seconds' % \
+                (t['index'], duration)
+        elif options.verbose:
+            print >> sys.stderr, 'Eliminated title %d: %d seconds' % \
+            (t['index'], duration)
 
     return episodes
 
@@ -170,7 +181,7 @@ if __name__ == '__main__':
     all_titles.append(current_title)
 
     if options.episodes:
-        preferred_titles = detect_episodes(all_titles)
+        preferred_titles = detect_episodes(all_titles, options)
     else:
         preferred_titles = [pick_preferred(all_titles, options)]
 
