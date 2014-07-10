@@ -122,13 +122,13 @@ def detect_episodes(all_titles, options):
     return episodes
 
 
-def print_title(title):
+def print_title(title, stream):
     k, v = zip(*sorted(title.iteritems(), key=lambda (k, v): k))
-    print '\t'.join(k)
-    print v[0],
+    print >> stream, '\t'.join(k)
+    print >> stream, v[0],
     for i in v[1:]:
-        print '\t' + str(i),
-    print
+        print >> stream, '\t' + str(i),
+    print >> stream
 
 
 if __name__ == '__main__':
@@ -187,7 +187,7 @@ if __name__ == '__main__':
 
     if options.verbose:
         for t in sorted(all_titles, key=lambda k: k['duration'], reverse=1):
-            print_title(t)
+            print_title(t, sys.stderr)
 
     for i, t in enumerate(preferred_titles):
         if i > 0:
