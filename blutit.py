@@ -134,7 +134,8 @@ if __name__ == '__main__':
             pass # We're not interested in this field
 
     all_titles.append(current_title)
-    preferred_title = current_title
+    if len(all_titles) == 1:
+        preferred_title = current_title
 
     if options.verbose:
         for t in sorted(all_titles, key=lambda k: k['duration'], reverse=1):
