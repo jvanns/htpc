@@ -48,16 +48,21 @@ def choose_title(current, preferred, options):
     if options.use_size:
         size, unit = current['size'].split(' ')
         s1 = normaliser[unit](float(size))
+        current['raw_size'] = s1
+
         size, unit = preferred['size'].split(' ')
         s2 = normaliser[unit](float(size))
+        preferred['raw_size'] = s2
 
         if s1 > s2:
             choice = current
     else:
         h, m, s = (int(n) for n in current['duration'].split(':'))
         d1 = (h * 3600) + (60 * m) + s
+        current['raw_duration'] = d1
         h, m, s = (int(n) for n in preferred['duration'].split(':'))
         d2 = (h * 3600) + (60 * m) + s
+        preferred['raw_duration'] = d2
 
         if d1 > d2:
             choice = current
