@@ -40,9 +40,9 @@ queue_runner() {
 
 	while [ `stat -c %h "${QUEUE_DIR}"` -gt 2 ]
 	do
-		for d in "`find $q -maxdepth 1 -type d \! -path $q`"
+		find "$q" -maxdepth 1 -type d \! -path "$q" | while IFS=$'\n' read d
 		do
-			queue_run "$d" || return 1
+			[ -d "$d" ] && queue_run "$d" || return 1
 		done
 		sleep 5
 	done
