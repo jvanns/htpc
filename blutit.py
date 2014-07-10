@@ -3,7 +3,6 @@
 # Small tool to correctly identify the main feature on a bluray disc
 
 import re
-from pprint import pprint
 from optparse import OptionParser
 from sys import exit, stderr, stdin
 
@@ -77,6 +76,15 @@ def lines(file_stream):
         yield l.strip()
 
 
+def print_title(title):
+    k, v = zip(*sorted(title.iteritems(), key=lambda (k, v): k))
+    print '\t'.join(k)
+    print v[0],
+    for i in v[1:]:
+        print '\t' + str(i),
+    print
+
+
 if __name__ == '__main__':
     fs = stdin
     ignore = True
@@ -130,6 +138,6 @@ if __name__ == '__main__':
 
     if options.verbose:
         for t in sorted(all_titles, key=lambda k: k['duration'], reverse=1):
-            pprint(t, stream=stderr, width=-1)
+            print_title(t)
     print preferred_title['index']
 
