@@ -13,6 +13,7 @@ run_encoder() {
 }
 
 queue_run() {
+	local i=1
 	local name="${1##*/}"
 	local p="${VIDEO_MNT}"
 
@@ -21,7 +22,7 @@ queue_run() {
 	cd "$1"
 	for x in `ls -tr1 */*.q`
 	do
-		e=".${x%%/*}.mkv" # Episode
+		e=".${i}.mkv" # Episode
 		c="`echo ${x##*/} | sed 's/\.q$//'`" # Category
 		d="`echo ${p}/${c}/${name:0:1}/${name}`" # Directory
 		f="${TITLE_PREFIX}${name}${TITLE_SUFFIX}" # File name (target)
@@ -31,6 +32,7 @@ queue_run() {
 		mkdir -p "${d}" && run_encoder "${1}/${x}" "${d}/${f}${e}" || return 1
 		[ -s "${d}/${f}${e}" ] || return 1 # Double (trivial) check!
 		rm "${x%%/*}"/*.{q,mkv} && rmdir "${x%%/*}"
+		let i="i + 1"
 	done
 	rmdir "$1"
 }
