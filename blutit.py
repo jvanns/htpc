@@ -115,17 +115,25 @@ def filter_title_lengths(titles, minimum):
            map(lambda x: x['raw_duration'], titles))
 
 
-def detect_episodes(all_titles, options):
-    lengths = filter_title_lengths(all_titles, options.min)
-    s = stddev(lengths) # Standard deviation of average duration
+def calculate_bounds(lengths, options):
     m = mean(lengths) # Average duration
+    s = stddev(lengths) # Standard deviation of average duration
+    bounds = (m - (s * options.deviations), m + (s * options.deviations))
 
     if options.verbose:
         print >> sys.stderr, 'Mean duration:      %.2f seconds' % (m)
         print >> sys.stderr, 'Standard deviation: %.2f seconds' % (s)
+        print >> sys.stderr, 'Lower bound:        %.2f seconds' % (bounds[0])
+        print >> sys.stderr, 'Upper bound:        %.2f seconds' % (bounds[1])
 
+    return bounds
+
+
+def detect_episodes(all_titles, options):
+    lengths = filter_title_lengths(all_titles, options.min)
+    bounds = calculate_bounds(lengths, options)
     episodes = []
-    bounds = (m - (s * options.deviations), m + (s * options.deviations))
+
     for t in all_titles:
         duration = t['raw_duration']
         if duration >= bounds[0] and duration <= bounds[1]:
