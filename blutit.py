@@ -43,6 +43,12 @@ def parse_command_line():
                       help="""minimum duration of an episode in seconds
                               [default: %default]""")
 
+    parser.add_option('-d', '--deviations', action='store', type='float',
+                      dest='deviations',
+                      default=1.5,
+                      help="""the number of deviations from the mean to accept
+                              [default: %default]""")
+
     parser.add_option('-v', '--verbose', action='store_true',
                       dest='verbose',
                       default=False,
@@ -119,7 +125,7 @@ def detect_episodes(all_titles, options):
         print >> sys.stderr, 'Standard deviation: %.2f seconds' % (s)
 
     episodes = []
-    bounds = (m - s, m + s)
+    bounds = (m - (s * options.deviations), m + (s * options.deviations))
     for t in all_titles:
         duration = t['raw_duration']
         if duration >= bounds[0] and duration <= bounds[1]:
