@@ -14,8 +14,8 @@ run_encoder() {
 
 queue_run() {
 	local i=1
-	local name="${1##*/}"
 	local p="${VIDEO_MNT}"
+	local name="`echo ${1##*/} | tr A-Z a-z`"
 
 	check_fs "$p" || return 1
 
@@ -27,7 +27,7 @@ queue_run() {
 		d="`echo ${p}/${c}/${name:0:1}/${name}`" # Directory
 		f="${TITLE_PREFIX}${name}${TITLE_SUFFIX}" # File name (target)
 
-		x="`ls -tr1 */*.mkv`" # Reassign
+		x="`ls -tr1 ${x%%/*}/*.mkv`" # Reassign
 
 		mkdir -p "${d}" && run_encoder "${1}/${x}" "${d}/${f}${e}" || return 1
 		[ -s "${d}/${f}${e}" ] || return 1 # Double (trivial) check!
