@@ -37,6 +37,12 @@ def parse_command_line():
                       help="""detect a set of episodes instead of main feature
                               [default: %default]""")
 
+    parser.add_option('-m', '--min-duration', action='store', type='int',
+                      dest='min',
+                      default=600,
+                      help="""minimum duration of an episode in seconds
+                              [default: %default]""")
+
     parser.add_option('-v', '--verbose', action='store_true',
                       dest='verbose',
                       default=False,
@@ -98,8 +104,13 @@ def stddev(a):
     return sqrt(sum((x - m)**2 for x in a) / float(len(a)))
 
 
+def filter_title_lengths(titles, minimum):
+    return filter(lambda y: y > minimum, \
+           map(lambda x: x['raw_duration'], titles))
+
+
 def detect_episodes(all_titles, options):
-    lengths = map(lambda x: x['raw_duration'], all_titles)
+    lengths = filter_title_lengths(all_titles, options.min)
     s = stddev(lengths) # Standard deviation of average duration
     m = mean(lengths) # Average duration
 
@@ -108,9 +119,10 @@ def detect_episodes(all_titles, options):
         print >> sys.stderr, 'Standard deviation: %.2f seconds' % (s)
 
     episodes = []
+    bounds = (m - s, m + s)
     for t in all_titles:
         duration = t['raw_duration']
-        if duration - s >= m and duration +s <= m:
+        if duration >= bounds[0] and duration <= bounds[1]:
             episodes.append(t)
             if options.verbose:
                 print >> sys.stderr, 'Selected title %d: %d seconds' % \
