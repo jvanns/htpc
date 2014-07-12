@@ -30,14 +30,23 @@ generic_umount() {
 	return $?
 }
 
+classify_titles() {
+	if [ "${CATEGORY}" = "tv" ]
+	then
+		TITLES=(`blutit ${BLUTIT_OPTS[@]} -e "$1"`)
+	else
+		TITLES[0]=`blutit ${BLUTIT_OPTS[@]} "$1"`
+	fi
+}
+
 identify_titles() {
 	local t="${TMP}/${MEDIA}.nfo"
 
 	# If no titles have been set, locate the single main feature on disc
 	if [ ${#TITLES[@]} -eq 0 ]
 	then
-		makemkvcon "${MAKEMKVCON_OPTS[@]}" -r info dev:${DEVICE} 1> "$t" && \
-		TITLES[0]=`blutit ${BLUTIT_OPTS[@]} "$t"`
+		makemkvcon "${MAKEMKVCON_OPTS[@]}" -r info dev:${DEVICE} 1> "$t"
+		[ $? -eq 0 ] && classify_titles "$t"
 	fi
 }
 
@@ -91,4 +100,3 @@ then
    prologue "$PRG" && rip_audio && epilogue "$PRG"
    ) > ${TMP}/${PRG}.${ME} 2>&1 &
 fi
-
