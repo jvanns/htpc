@@ -40,7 +40,7 @@ queue_run() {
 queue_runner() {
 	local q="${QUEUE_DIR}"
 
-	while [ `stat -c %h "${QUEUE_DIR}"` -gt 2 ]
+	while [ `stat -c %h "${q}"` -gt 2 ]
 	do
 		find "$q" -maxdepth 1 -type d \! -path "$q" | while IFS=$'\n' read d
 		do
