@@ -2,6 +2,7 @@
 
 set -eu
 
+FULL=0
 PURGE=0
 DUMMY=''
 TARGET=''
@@ -35,7 +36,7 @@ next_level()
 
 backup_system()
 {
-   local options=''
+	local options=''
 	local -a sources=('/' '/home')
 	local d="${TARGET}/system/`date +%m`"
 
@@ -44,12 +45,16 @@ backup_system()
 	for fs in ${sources[@]}
 	do
 		name=${fs##*/}
-		level=`next_level "${fs}"`
-		
+		if [ $FULL -eq 1 ]; then
+			level=0
+		else
+			level=`next_level "${fs}"`
+		fi
+
 		if [ "x$name" = "x" ]; then
 			name='root'
 		fi
-		
+
 		$DUMMY dump -${level} -uj -v \
 			-A "${d}/dump-${name}-archive-${level}.log" \
 			-f "${d}/dump-${name}-db-${level}.log" "${fs}"
@@ -63,22 +68,22 @@ backup_data()
 	local -a sources=('/mnt/video' '/mnt/music' '/mnt/photos')
 
 	mkdir -p "$d" || return 1
-   [ $PURGE -eq 1 ] && options='--delete-during'
+	[ $PURGE -eq 1 ] && options='--delete-during'
 
 	for fs in ${sources[@]}
 	do
 		name=${fs##*/}
-		
+
 		if [ "x$name" = "x" ]; then
 			name='root'
 		fi
 
 		$DUMMY rsync -amxh --stats "$options" \
-         "${fs}/" "${d}/${name}/"
+			"${fs}/" "${d}/${name}/"
 	done
 }
 
-while getopts 'dph' OPTION; do
+while getopts 'dpfh' OPTION; do
    case $OPTION in
    d)
       DUMMY=echo
@@ -86,11 +91,15 @@ while getopts 'dph' OPTION; do
    p)
       PURGE=1
       ;;
+   f)
+      FULL=1
+      ;;
    h)
       echo -e "Usage: $0 [options] <device>\nOptions:"
       echo -e "\t-h\tHelp! Print this message then exit"
       echo -e "\t-d\tDummy mode - print, don't execute"
-      echo -e "\t-p\tPurge (from the target) as we go "
+      echo -e "\t-p\tPurge (from the target) as we go"
+      echo -e "\t-f\tPerform a full system backup (level 0 dump)"
       exit 0
       ;;
    ?)
