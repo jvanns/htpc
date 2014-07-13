@@ -50,15 +50,19 @@ identify_titles() {
 	fi
 }
 
+extract_title() {
+	nice -n ${EXTRACT_PRIORITY} \
+	makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv dev:${DEVICE} "${1}" "$2"
+	[ $? -eq 0 ] && [ -s "${2}/title*.mkv" ] && touch "$2/${CATEGORY}.q"
+}
+
 extract_titles() {
 	local p="${QUEUE_DIR}/${ID_FS_LABEL}"
 
 	for t in ${TITLES[@]}
 	do
 		mkdir -p "$p/$t" || return 1
-		nice -n ${EXTRACT_PRIORITY} \
-		makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv dev:${DEVICE} "${t}" "$p/$t" && \
-		touch "$p/$t/${CATEGORY}.q"
+		extract_title "$t" "${p}/${t}" || return 1
 	done
 }
 
