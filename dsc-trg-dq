@@ -19,7 +19,7 @@ queue_run() {
 
 	check_fs "$p" || return 1
 
-	for x in `ls -tr1 */*.q`
+	for x in `ls -tr1 */*.q 2> /dev/null`
 	do
 		e=".${i}.mkv" # Episode
 		c="`echo ${x##*/} | sed 's/\.q$//'`" # Category
