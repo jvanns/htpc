@@ -19,7 +19,6 @@ queue_run() {
 
 	check_fs "$p" || return 1
 
-	cd "$1"
 	for x in `ls -tr1 */*.q`
 	do
 		e=".${i}.mkv" # Episode
@@ -29,12 +28,21 @@ queue_run() {
 
 		x="`ls -tr1 ${x%%/*}/*.mkv`" # Reassign
 
-		mkdir -p "${d}" && run_encoder "${1}/${x}" "${d}/${f}${e}" || return 1
-		[ -s "${d}/${f}${e}" ] || return 1 # Double (trivial) check!
+		# Pre sanity checks...
+		mkdir -p "${d}" || return 1
+		[ -f "${1}/${x}" ] || return 1
+		[ ! -f "${d}/${f}${e}" ] || return 1
+
+		# Encode!
+		run_encoder "${1}/${x}" "${d}/${f}${e}" || return 1
+
+		# Post sanity checks...
+		[ -s "${d}/${f}${e}" ] || return 1
+
+		# Clean up
 		rm "${x%%/*}"/*.{q,mkv} && rmdir "${x%%/*}"
 		let i="i + 1"
 	done
-	rmdir "$1"
 }
 
 queue_runner() {
@@ -44,7 +52,9 @@ queue_runner() {
 	do
 		find "$q" -maxdepth 1 -type d \! -path "$q" | while IFS=$'\n' read d
 		do
-			[ -d "$d" ] && queue_run "$d" || return 1
+			cd "$d" || return 1
+			queue_run "$d" || return 1
+			rmdir "$d" || return 1
 		done
 		sleep 5
 	done
