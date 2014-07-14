@@ -50,10 +50,20 @@ identify_titles() {
 	fi
 }
 
+confirm_rip() {
+	local -i n=`tail -n1 "$1" | grep -c '^Copy complete. 1 titles saved.$'`
+	[ $n -eq 1 ] && [ -s "`dir ${2}/title*.mkv`" ] && return 0
+}
+
 extract_title() {
+	local f="${TMP}/rip.log"
+
 	nice -n ${EXTRACT_PRIORITY} \
-	makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv dev:${DEVICE} "${1}" "$2"
-	[ $? -eq 0 ] && [ -s "${2}/title*.mkv" ] && touch "$2/${CATEGORY}.q"
+	makemkvcon "${MAKEMKVCON_OPTS[@]}" mkv \
+	dev:${DEVICE} "${1}" "$2" 2>&1 | tee "$f"
+
+	confirm_rip "$f" "$2" || return 1
+	touch "$2/${CATEGORY}.q"
 }
 
 extract_titles() {
