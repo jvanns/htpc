@@ -45,7 +45,7 @@ def parse_command_line():
 
     parser.add_option('-d', '--deviations', action='store', type='float',
                       dest='deviations',
-                      default=2.0,
+                      default=1.75,
                       help="""the number of deviations from the mean to accept
                               [default: %default]""")
 
