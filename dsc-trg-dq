@@ -54,7 +54,7 @@ queue_runner() {
 		do
 			cd "$d" || return 1
 			queue_run "$d" || return 1
-			[ `stat -c %h "$d"` -eq 2 ] && rmdir "$d"
+			[ `stat -c %h "$d"` -eq 2 ] && cd - && rmdir "$d"
 		done
 		sleep 5
 	done
