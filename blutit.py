@@ -37,7 +37,7 @@ def parse_command_line():
 
     parser.add_option('-m', '--min-duration', action='store', type='int',
                       dest='min',
-                      default=600,
+                      default=900,
                       help="""minimum duration of an episode in seconds
                               [default: %default]""")
 
