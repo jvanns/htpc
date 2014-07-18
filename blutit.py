@@ -10,10 +10,8 @@ from sys import exit, stderr, stdin
 
 # Global lookup table of functors given a unit;
 # It reduces the argument down to the raw #bytes
-normaliser = {
-   'MB': lambda x: x * float(2**20),
-   'GB': lambda x: x * float(2**30)
-}
+MB = float(1L << 20)
+GB = float(1L << 30)
 
 def parse_command_line():
     parser = OptionParser(version='%prog 0.1')
@@ -61,9 +59,7 @@ def parse_command_line():
 def augment_title(title):
     h, m, s = (int(n) for n in title['duration'].split(':'))
     title['raw_duration'] = (h * 3600) + (60 * m) + s
-
-    size, unit = title['size'].split(' ')
-    title['raw_size'] = normaliser[unit](float(size))
+    title['gigabytes'] = title['size'] / GB
 
 
 def choose_title(current, preferred, options):
@@ -74,7 +70,7 @@ def choose_title(current, preferred, options):
     choice = preferred
 
     if options.use_size:
-        if current['raw_size'] > preferred['raw_size']:
+        if current['size'] > preferred['size']:
             choice = current
     else:
         if current['raw_duration'] > preferred['raw_duration']:
@@ -161,7 +157,7 @@ if __name__ == '__main__':
     current_title = {'index': 0}
     exp = re.compile(r'(^[^:]+):(.*)$')
     section_mapper = {1: 'type', 2: 'name', 5: 'codec',
-                      8: 'chapters', 9: 'duration', 10: 'size',
+                      8: 'chapters', 9: 'duration', 11: 'size',
                       13: 'bitrate', 14: 'channels', 24: 'title', 29: 'lang'}
     reverse_mapper = dict((v, k) for k, v in section_mapper.iteritems())
 
@@ -184,7 +180,7 @@ if __name__ == '__main__':
         # Cast IDs to integers leaving strings intact
         info = csv_data.split(',', 3)
         info[0:-1] = [int(x) for x in info[0:-1]]
-         
+
         new_tid = info[0]
         old_tid = current_title['index']
         if old_tid != new_tid:
@@ -196,7 +192,12 @@ if __name__ == '__main__':
             continue
 
         try:
-            current_title[section_mapper[info[1]]] = info[-1].strip('"')
+            v = info[-1].strip('"')
+            try:
+                v = int(v)
+            except ValueError:
+                pass
+            current_title[section_mapper[info[1]]] = v
         except KeyError:
             pass # We're not interested in this field
 
