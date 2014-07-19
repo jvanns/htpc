@@ -39,14 +39,43 @@ classify_titles() {
 	fi
 }
 
+bad_disc_label() {
+	local r=0
+	[ "x${ID_FS_LABEL}" = "x" ] && return 1 # Empty
+
+	case "${ID_FS_LABEL}" in
+		'DVD_VIDEO')
+         		r=1
+			;;
+   	esac
+
+   	echo -n $r
+}
+
+new_disc_label() {
+	local n="`blutit ${BLUTIT_OPTS[@]} -n $1 | tr ', ' '_'`"
+	[ "x$n" != "x" ] && echo "$n" || echo "$ID_FS_LABEL"
+}
+
 identify_titles() {
 	local t="${TMP}/${MEDIA}.nfo"
 
-	# If no titles have been set, locate the single main feature on disc
-	if [ ${#TITLES[@]} -eq 0 ]
+	if [ ${#TITLES[@]} -eq 0 ] || [ `bad_disc_label` -eq 1 ]
 	then
 		makemkvcon "${MAKEMKVCON_OPTS[@]}" -r info dev:${DEVICE} 1> "$t"
-		[ $? -eq 0 ] && classify_titles "$t"
+		[ $? -eq 0 ] || return 1
+
+		# If no titles have been set, locate the single main feature on disc
+		if [ ${#TITLES[@]} -eq 0 ]
+		then
+			classify_titles "$t"
+		fi
+
+		# If the disc label is shite, attempt to retrieve it from file
+		if [ `bad_disc_label` -eq 1 ]
+		then
+			ID_FS_LABEL="`new_disc_label $t`"
+		fi
 	fi
 }
 
