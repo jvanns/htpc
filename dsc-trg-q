@@ -50,9 +50,13 @@ identify_titles() {
 	fi
 }
 
+find_mkv() {
+	find "$1" -maxdepth 1 -type f -name '*.mkv'
+}
+
 confirm_rip() {
 	local -i n=`tail -n1 "$1" | grep -c '^Copy complete. 1 titles saved.$'`
-	[ $n -eq 1 ] && [ -s "`dir ${2}/title*.mkv`" ] && return 0
+	[ $n -eq 1 ] && [ -s "`find_mkv $2`" ] && return 0
 }
 
 extract_title() {
