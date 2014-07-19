@@ -29,6 +29,12 @@ def parse_command_line():
                       help="""instead of duration, use stream size as the key
                               [default: %default]""")
 
+    parser.add_option('-n', '--print-name', action='store_true',
+                      dest='print_name',
+                      default=False,
+                      help="""instead of title indices, print the title name
+                              [default: %default]""")
+
     parser.add_option('-e', '--episodes', action='store_true',
                       dest='episodes',
                       default=False,
@@ -215,6 +221,14 @@ if __name__ == '__main__':
     if options.verbose:
         for t in sorted(all_titles, key=lambda k: k['duration'], reverse=1):
             print_title(t, sys.stderr)
+
+    if options.print_name:
+        r = 0
+        try:
+            print preferred_titles[0]['name']
+        except KeyError:
+            r = 1
+        sys.exit(r)
 
     for i, t in enumerate(preferred_titles):
         if i > 0:
