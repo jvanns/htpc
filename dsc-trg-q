@@ -44,12 +44,12 @@ bad_disc_label() {
 	[ "x${ID_FS_LABEL}" = "x" ] && return 1 # Empty
 
 	case "${ID_FS_LABEL}" in
-		'DVD_VIDEO')
-         		r=1
-			;;
-   	esac
+	'DVD_VIDEO')
+		r=1
+		;;
+	esac
 
-   	echo -n $r
+	echo -n $r
 }
 
 new_disc_label() {
