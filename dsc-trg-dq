@@ -12,6 +12,10 @@ run_encoder() {
 		"${audio_stream[@]}" -i "$1" -o "$2"
 }
 
+rewrite_filename() {
+	rename 's/\.[0-9]+\.mkv$/\.mkv/' "$1"
+}
+
 queue_run() {
 	local i=1
 	local p="${VIDEO_MNT}"
@@ -43,6 +47,8 @@ queue_run() {
 		rm "${x%%/*}"/*.{q,mkv} && rmdir "${x%%/*}"
 		let i="i + 1"
 	done
+
+	[ $i -eq 2 ] && rename "${d}/${f}${e}" || return 0
 }
 
 queue_runner() {
