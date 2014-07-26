@@ -16,21 +16,21 @@
 #
 # find . -type d -exec ./get_coverart "{}" \;
 
-dpath="$1"
-encoded="$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$dpath")"
+DIR="$1"
+ESCAPED="$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$DIR")"
+URL="http://www.albumart.org/index.php?srchkey=$ESCAPED&itempage=1&newsearch=1&searchindex=Music"
 
 # Skip already processed ones 
-if [ -f "$dpath/cover.jpg" ]
+if [ -f "$DIR/cover.jpg" ]
 then
-echo "$dpath/cover.jpg already exists"
-exit
+	echo "$DIR/cover.jpg already exists"
+	exit 1
 fi
 
-echo ""
 echo "Searching for: [$1]"
-url="http://www.albumart.org/index.php?srchkey=$encoded&itempage=1&newsearch=1&searchindex=Music"
-echo "Searching ... [$url]"
-coverurl=`wget -qO - $url | xmllint --html --xpath  'string(//a[@title="View larger image" and starts-with(@href, "http://ecx.images-amazon")]/@href)' - 2>/dev/null`
-echo "Cover URL: [$coverurl]"
-wget "$coverurl" -O "$dpath/cover.jpg"
+echo "Searching ... [$URL]"
 
+COVERURL=`wget -qO - $URL | xmllint --html --xpath  'string(//a[@title="View larger image" and starts-with(@href, "http://ecx.images-amazon")]/@href)' - 2> /dev/null`
+
+echo "Cover URL: [$COVERURL]"
+wget "$COVERURL" -O "$DIR/cover.jpg"
