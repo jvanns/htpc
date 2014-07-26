@@ -20,10 +20,16 @@ DIR="$1"
 ESCAPED="$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$DIR")"
 URL="http://www.albumart.org/index.php?srchkey=$ESCAPED&itempage=1&newsearch=1&searchindex=Music"
 
+if [ "x$1" = "x" ]
+then
+	echo "Provide a target album-named directory" >&2
+	exit 1
+fi
+
 # Skip already processed ones 
 if [ -f "$DIR/cover.jpg" ]
 then
-	echo "$DIR/cover.jpg already exists"
+	echo "$DIR/cover.jpg already exists" >&2
 	exit 1
 fi
 
