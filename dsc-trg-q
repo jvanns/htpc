@@ -109,10 +109,15 @@ extract_titles() {
 	done
 }
 
+extract_and_encode_tracks() {
+	nice -n ${EXTRACT_PRIORITY} \
+	abcde -w 'Ripped with abcde' -N -d "${DEVICE}"
+}
+
 rip_audio() {
 	local p="$MUSIC_MNT"
 
-	check_fs "$p" && abcde -w 'Ripped with abcde' -N -d "${DEVICE}"
+	check_fs "$p" && extract_and_encode_tracks
 }
 
 rip_video() {
