@@ -1,24 +1,10 @@
-#!/bin/bash -e
-# get_coverart.sh
+#!/bin/bash
 #
 # This simple script will fetch the cover art for the album information
 # provided on the command line. It will then download that cover image,
-# and place it into the child directory. The term "album information" is
-# really the relative path of the final directory.
+# and place it into the temporary directory. The term "album information" is
+# really the album-named relative path of the current directory.
 #
-# get_coverart <relative-path>
-# 
-# get_coverart Tonic/Lemon Parade
-# 
-# get_coverart Tonic/Lemon\ Parade
-# 
-# get_coverart Tonic/Lemon_Parade
-#
-# find . -type d -exec ./get_coverart "{}" \;
-
-DIR="$1"
-ESCAPED="$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$DIR")"
-URL="http://www.albumart.org/index.php?srchkey=$ESCAPED&itempage=1&newsearch=1&searchindex=Music"
 
 if [ "x$1" = "x" ]
 then
@@ -26,17 +12,19 @@ then
 	exit 1
 fi
 
-# Skip already processed ones 
-if [ -f "$DIR/cover.jpg" ]
-then
-	echo "$DIR/cover.jpg already exists" >&2
-	exit 1
-fi
+PAGE='http://www.albumart.org/index.php'
+ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "${1// /+}"`"
+URL="${PAGE}?searchkey=$ESCAPED&itempage=1&newsearch=1&searchindex=Music"
 
 echo "Searching for: [$1]"
 echo "Searching ... [$URL]"
 
-COVERURL=`wget -qO - $URL | xmllint --html --xpath  'string(//a[@title="View larger image" and starts-with(@href, "http://ecx.images-amazon")]/@href)' - 2> /dev/null`
+XMLCMD='xmllint --html --xpath'
+AMAZON='http://ecx.images-amazon'
+COVERURL=`wget -qO - "$URL" | $XMLCMD \
+'string(//a[@title="View larger image" and starts-with(@href, "'$AMAZON'")]/@href)' - 2> /dev/null`
 
 echo "Cover URL: [$COVERURL]"
-wget "$COVERURL" -O "$DIR/cover.jpg"
+wget -qO - "$COVERURL" 1> "${TMP}/album-art.jpg"
+[ $? -eq 0 ] && [ -s "${TMP}/album-art.jpg" ] && exit 0
+
