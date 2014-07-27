@@ -109,9 +109,19 @@ extract_titles() {
 	done
 }
 
+embed_album_art() {
+	# The mindepth must match the path structure in abcde.conf
+	local p="`find $1 -depth -mindepth 2 -type d -newer $2`"
+
+	cd "$p" && cd ../ && embed-album-art "${p##*/}"
+}
+
 extract_and_encode_tracks() {
+	local t="${TMP}/epoch"
+
+	touch "$t" || return 1
 	nice -n ${EXTRACT_PRIORITY} \
-	abcde -w 'Ripped with abcde' -N -d "${DEVICE}"
+	abcde -N -d "${DEVICE}" && embed_album_art "$p" "$t"
 }
 
 rip_audio() {
