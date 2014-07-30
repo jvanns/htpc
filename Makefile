@@ -5,6 +5,7 @@ install:
 	install -CD -o root -g root -m 0755 blutit.py $(DESTDIR)/usr/local/bin/blutit
 	install -CD -o root -g root -m 0755 audio-prefs.py $(DESTDIR)/usr/local/bin/audio-prefs
 	install -CD -o root -g root -m 0755 audio-info.sh $(DESTDIR)/usr/local/bin/audio-info
+	install -CD -o root -g root -m 0755 embed-album-art.sh $(DESTDIR)/usr/local/bin/embed-album-art
 	install -CD -o root -g root -m 0755 backup.sh $(DESTDIR)/usr/local/sbin/backup
 	install -C -o root -g root -m 0755 dsc-trg-q $(DESTDIR)/usr/local/sbin/
 	install -C -o root -g root -m 0755 dsc-trg-q-prologue $(DESTDIR)/usr/local/sbin/
