@@ -43,8 +43,14 @@ def parse_command_line():
 
     parser.add_option('-m', '--min-duration', action='store', type='int',
                       dest='min',
-                      default=900,
+                      default=900, # 15mins
                       help="""minimum duration of an episode in seconds
+                              [default: %default]""")
+
+    parser.add_option('-M', '--max-duration', action='store', type='int',
+                      dest='max',
+                      default=4500, # 1h15mins
+                      help="""maximum duration of an episode in seconds
                               [default: %default]""")
 
     parser.add_option('-d', '--deviations', action='store', type='float',
@@ -112,9 +118,9 @@ def stddev(a):
     return sqrt(sum((x - m)**2 for x in a) / float(len(a)))
 
 
-def filter_title_lengths(titles, minimum):
-    return filter(lambda y: y > minimum, \
-           map(lambda x: x['raw_duration'], titles))
+def filter_title_lengths(titles, minimum, maximum):
+    f = lambda x: x > minimum and x < maximum
+    return filter(f, map(lambda x: x['raw_duration'], titles))
 
 
 def calculate_bounds(lengths, options):
@@ -132,7 +138,7 @@ def calculate_bounds(lengths, options):
 
 
 def detect_episodes(all_titles, options):
-    lengths = filter_title_lengths(all_titles, options.min)
+    lengths = filter_title_lengths(all_titles, options.min, options.max)
     bounds = calculate_bounds(lengths, options)
     episodes = []
 
