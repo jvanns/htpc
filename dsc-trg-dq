@@ -44,7 +44,8 @@ queue_run() {
 		[ -s "${d}/${f}${e}" ] || return 1
 
 		# Clean up
-		rm "${x%%/*}"/*.{q,mkv} && rmdir "${x%%/*}"
+		rm -f "${x%%/*}"/*.{q,mkv}
+		rmdir "${x%%/*}"
 		let i="i + 1"
 	done
 
