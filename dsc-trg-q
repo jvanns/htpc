@@ -109,11 +109,23 @@ extract_titles() {
 	done
 }
 
+embed_encoder_opts() {
+# Do this in a sub-shell as we don't want to pollute the environment ;)
+(
+	. /etc/abcde.conf
+	find "$1" -type f -name '*.mp3' -print0 \
+	| xargs -0 -- eyeD3 -2 --comment "eng:Encoder:${ENCODERVERSION} ${ENCODEROPTS}"
+)
+}
+
 embed_album_art() {
+	cd "$1" && cd ../ && embed-album-art "${1##*/}"
+}
+
+tag_audio_files() {
 	# The mindepth must match the path structure in abcde.conf
 	local p="`find $1 -depth -mindepth 2 -type d -newer $2`"
-
-	cd "$p" && cd ../ && embed-album-art "${p##*/}"
+	embed_encoder_opts "$p" && embed_album_art "$p"
 }
 
 extract_and_encode_tracks() {
@@ -121,7 +133,7 @@ extract_and_encode_tracks() {
 
 	touch "$t" || return 1
 	nice -n ${EXTRACT_PRIORITY} \
-	abcde -N -d "${DEVICE}" && embed_album_art "$p" "$t"
+	abcde -N -d "${DEVICE}" && tag_audio_files "$p" "$t"
 }
 
 rip_audio() {
