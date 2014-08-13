@@ -17,7 +17,11 @@ check_fs() {
 get_level()
 {
 	local -r db='/var/lib/dumpdates'
-	grep "^${1} " "${db}" | sort -t ' ' -k2 -n | tail -n1 | awk '{print $2}'
+	grep "^${1} " "${db}" | while read disk level dy mn dt tm yr tz
+	do
+		echo -ne "$disk\t$level\t"
+		date -d "$dy $mn $dt $yr $tm $tz" +%s
+	done | sort -t $'\t' -k 3 -nr | head -n1 | cut -d $'\t' -f 2
 }
 
 get_dev()
