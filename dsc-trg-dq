@@ -16,8 +16,13 @@ rewrite_filename() {
 	rename 's/\.[0-9]+\.mkv$/\.mkv/' "$1"
 }
 
+count_files() {
+	find "$1" -maxdepth 1 -type f -name '*.mkv' | wc -l | awk '{print $1}'
+}
+
 queue_run() {
 	local i=1
+	local l= # last file
 	local p="${VIDEO_MNT}"
 	local name="`echo ${1##*/} | tr A-Z a-z`"
 
@@ -42,6 +47,7 @@ queue_run() {
 
 		# Post sanity checks...
 		[ -s "${d}/${f}${e}" ] || return 1
+		l="${d}/${f}${e}"
 
 		# Clean up
 		rm -f "${x%%/*}"/*.{q,mkv}
@@ -49,7 +55,7 @@ queue_run() {
 		let i="i + 1"
 	done
 
-	[ $i -eq 2 ] && rename "${d}/${f}${e}" || return 0
+	[ `count_files "$d"` -eq 1 ] && rename "$l" || return 0
 }
 
 queue_runner() {
