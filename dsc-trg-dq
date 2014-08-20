@@ -50,12 +50,11 @@ queue_run() {
 		l="${d}/${f}${e}"
 
 		# Clean up
-		rm -f "${x%%/*}"/*.{q,mkv}
-		rmdir "${x%%/*}"
+		rm -fr "${x%%/*}"
 		let i="i + 1"
 	done
 
-	[ `count_files "$d"` -eq 1 ] && rename "$l" || return 0
+	[ `count_files "${l%/*}"` -eq 1 ] && rename "$l" || return 0
 }
 
 queue_runner() {
