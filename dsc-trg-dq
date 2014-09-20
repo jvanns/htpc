@@ -26,12 +26,8 @@ rewrite_filename() {
 	rename 's/\.[0-9]+\.mkv$/\.mkv/' "$1"
 }
 
-count_files() {
-	find "$1" -maxdepth 1 -type f -name '*.mkv' | wc -l | awk '{print $1}'
-}
-
 queue_run() {
-	local i=1
+	local -i i=0
 	local l= # last file
 	local p="${VIDEO_MNT}"
 	local name="`echo ${1##*/} | tr A-Z a-z`"
@@ -43,6 +39,8 @@ queue_run() {
 
 	for x in `ls -tr1 */*.q 2> /dev/null`
 	do
+		let i="i + 1"
+
 		e=".${i}.mkv" # Episode
 		c="`echo ${x##*/} | sed 's/\.q$//'`" # Category
 		d="`echo ${p}/${c}/${name:0:1}/${name}`" # Directory
@@ -61,10 +59,9 @@ queue_run() {
 
 		# Clean up
 		rm -fr "${x%%/*}"
-		let i="i + 1"
 	done
 
-	[ `count_files "${l%/*}"` -eq 1 ] && rename "$l" || return 0
+	[ ${i} -eq 1 ] && rename "$l" || return 0
 }
 
 queue_runner() {
@@ -72,11 +69,11 @@ queue_runner() {
 
 	while [ `stat -c %h "${q}"` -gt 2 ]
 	do
-		find "$q" -maxdepth 1 -type d \! -path "$q" | while IFS=$'\n' read d
+		find "$q" -maxdepth 1 -type d \! -path "$q" | while IFS=$'\n' read t
 		do
-			cd "$d" || return 1
-			queue_run "$d" || return 1
-			[ `stat -c %h "$d"` -eq 2 ] && cd - && rmdir "$d"
+			cd "$t" || return 1
+			queue_run "$t" || return 1
+			[ `stat -c %h "$t"` -eq 2 ] && rmdir "$t"
 		done
 		sleep 5
 	done
