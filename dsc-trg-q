@@ -44,7 +44,7 @@ bad_disc_label() {
 	[ "x${ID_FS_LABEL}" = "x" ] && return 1 # Empty
 
 	case "${ID_FS_LABEL}" in
-	'DVD_VIDEO')
+	'DVD_VIDEO'|'DVDVIDEO')
 		r=1
 		;;
 	esac
