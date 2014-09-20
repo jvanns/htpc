@@ -38,6 +38,9 @@ queue_run() {
 
 	check_fs "$p" || return 1
 
+	# Re-read configurable variables/parameters etc.
+	[ -f /etc/dsc-trg.conf ] && . /etc/dsc-trg.conf
+
 	for x in `ls -tr1 */*.q 2> /dev/null`
 	do
 		e=".${i}.mkv" # Episode
