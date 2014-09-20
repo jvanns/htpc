@@ -6,10 +6,20 @@ PRG=`basename $0`
 # Configurable variables/parameters etc.
 [ -f /etc/dsc-trg.conf ] && . /etc/dsc-trg.conf
 
+confirm_encode() {
+	local -i n=`tail -n5 "$1" | grep -c '^Encode done!$'`
+	[ $n -eq 1 ] && [ -s "$2" ] && return 0
+}
+
 run_encoder() {
+	local f="${TMP}/encode.log"
 	local -a audio_stream=(`audio-info "$1" | audio-prefs ${AUDIO_PREFS_OPTS[@]}`)
 	nice -n ${ENCODER_PRIORITY} HandBrakeCLI "${HANDBRAKE_OPTS[@]}" \
-		"${audio_stream[@]}" -i "$1" -o "$2"
+		"${audio_stream[@]}" -i "$1" -o "$2" 2>&1 | tee "$f"
+
+	# Post sanity checks (Handbrake's exit code is unreliable) ...
+	confirm_encode "$f" "$2"
+	return $?
 }
 
 rewrite_filename() {
@@ -43,11 +53,8 @@ queue_run() {
 		[ ! -f "${d}/${f}${e}" ] || return 1
 
 		# Encode!
-		run_encoder "${1}/${x}" "${d}/${f}${e}" || return 1
-
-		# Post sanity checks...
-		[ -s "${d}/${f}${e}" ] || return 1
 		l="${d}/${f}${e}"
+		run_encoder "${1}/${x}" "${l}" || return 1
 
 		# Clean up
 		rm -fr "${x%%/*}"
