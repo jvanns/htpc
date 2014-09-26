@@ -61,7 +61,7 @@ queue_run() {
 		rm -fr "${x%%/*}"
 	done
 
-	[ ${i} -eq 1 ] && rename "$l" || return 0
+	[ ${i} -eq 1 ] && rewrite_filename "$l" || return 0
 }
 
 queue_runner() {
