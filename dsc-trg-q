@@ -119,7 +119,9 @@ embed_encoder_opts() {
 }
 
 embed_album_art() {
-	cd "$1" && cd ../ && embed-album-art "${1##*/}"
+	local p="$OLDPWD"
+
+	cd "$1" && cd ../ && embed-album-art "${1##*/}" && cd "$p"
 }
 
 tag_audio_files() {
