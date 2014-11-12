@@ -1,0 +1,8 @@
+# UNCONFIGURED FSTAB FOR BASE SYSTEM
+/dev/system/tmp					/tmp		ext4	defaults				0	0
+/dev/system/home				/home		ext4	defaults				0	0
+/dev/data/video					/mnt/video	ext4	rw,nosuid,nodev,noexec,auto,user,async	0	0
+/dev/data/music					/mnt/music	ext4	rw,nosuid,nodev,noexec,auto,user,async	0	0
+/dev/data/photos				/mnt/photos	ext4	rw,nosuid,nodev,noexec,auto,user,async	0	0
+# The root filesystem is /dev/sdc1 on Kubrick
+UUID=ec68fa4d-5873-4dd9-beb4-259c86cfb68e	/		ext4	errors=remount-ro			0       1

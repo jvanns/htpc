@@ -1,0 +1,25 @@
+# interfaces(5) file used by ifup(8) and ifdown(8)
+
+auto lo
+iface lo inet loopback
+
+# Static, wired NIC
+auto eth2
+iface eth2 inet static
+	address 10.0.0.2
+	netmask 255.0.0.0
+	network 10.0.0.0
+	broadcast 10.255.255.255
+#	dns-nameservers 192.168.0.1
+#	post-up ip route add default via 10.0.0.1
+
+# Dynamic, wired NIC
+#auto eth2
+#iface eth2 inet dhcp
+
+# Wireless device
+allow-hotplug wlan1
+auto wlan1
+iface wlan1 inet dhcp
+	wpa-driver wext
+	wpa-conf /etc/wpa_supplicant.conf
