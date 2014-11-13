@@ -12,10 +12,6 @@ format_files() {
 	done
 }
 
-copy_files() {
-	grep -iv '^itunes.*|/' | format_files
-}
-
 identify_files() {
 	for f in "$@"
 	do
@@ -23,7 +19,7 @@ cat <<EOF | mediainfo --Inform='file:///dev/stdin' "$f"
 General;%Encoded_Library%|%CompleteName%|
 Audio;%Format%|%Language%|%Channels%|%BitDepth%|%BitRate%
 EOF
-	done
+	done | grep -iv '^itunes.*|/' | format_files
 }
 
 bootstrap_migration() {
@@ -46,7 +42,7 @@ if [ "$MODE" = 'copy' ]; then
 	bootstrap_migration "$1" "$2"
 elif [ "$MODE" = 'zygote' ]; then
 	shift
-	identify_files "$@" | copy_files
+	identify_files "$@"
 elif [ "x${MODE}" = 'x' ]; then
 	usage
 else
