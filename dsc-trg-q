@@ -124,6 +124,10 @@ embed_album_art() {
 	cd "$1" && cd ../ && embed-album-art "${1##*/}" && cd "$p"
 }
 
+map_genre() {
+	f="`ls -1 $1/* | head -n1`"
+}
+
 tag_audio_files() {
 	# The mindepth must match the path structure in abcde.conf
 	local p="`find $1 -depth -mindepth 2 -type d -newer $2`"
