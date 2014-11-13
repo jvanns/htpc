@@ -27,7 +27,7 @@ bootstrap_migration() {
 	local p=`getconf _NPROCESSORS_ONLN`
 
 	find "$1" -type f \
-		\! -name 'XXX' \
+		\! -name '*.mp4' \
 		-print0 \
 	| xargs -0 -P$p -n$l -- $SELF zygote
 }
