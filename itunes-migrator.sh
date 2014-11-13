@@ -2,9 +2,15 @@
 
 set -eu
 
-SELF="$0"
 MODE="${1:-}"
+SELF="`readlink -f $0`"
 INFO_FILE="/tmp/`basename $SELF`.inf"
+
+# A direct copy of the mungefilename() function in abcde.conf
+munge()
+{
+	echo "$@" | tr / _ | tr -d \'\"\?\[:cntrl:\] | tr "[:upper:]" "[:lower:]"
+}
 
 format_files() {
 	while IFS=$'|' read enclib encapp file album artist title format bdep brat
@@ -12,7 +18,11 @@ format_files() {
 		if [[ "$enclib" =~ ^itunes ]] || [[ "$encapp" =~ ^itunes ]]; then
 			continue
 		fi
-		echo -e "$file\t$album"
+
+		# Follow the same format as OUTPUTFORMAT in abcde.conf
+		suffix="`munge $title`"
+		prefix="`munge $album`/`munge $artist`"
+		echo install -D "$file" "./${prefix}/${suffix}.${file#*.}"
 	done
 }
 
@@ -35,6 +45,7 @@ bootstrap_migration() {
 
 	trap "rm -f $INFO_FILE" EXIT
 
+	cd "$2"
 	find "$1" -type f \
 		\! -name '*.mp4' \
 		-print0 \
