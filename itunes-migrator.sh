@@ -5,8 +5,15 @@ set -eu
 SELF="$0"
 MODE="${1:-}"
 
+format_files() {
+	while IFS=$'|' read encoder file format lang channels bdepth brate
+	do
+		mediainfo --Inform='General;%Album%|%Performer%|%Track name' "$file"
+	done
+}
+
 copy_files() {
-	grep -iv '^itunes.*|/'
+	grep -iv '^itunes.*|/' | format_files
 }
 
 identify_files() {
