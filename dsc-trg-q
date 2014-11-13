@@ -113,7 +113,7 @@ embed_encoder_opts() {
 # Do this in a sub-shell as we don't want to pollute the environment ;)
 (
 	. /etc/abcde.conf
-	find "$1" -type f -name '*.mp3' -print0 \
+	find "$1" -type f -name "*.${OUTPUTTYPE}" -print0 \
 	| xargs -0 -- eyeD3 -2 --comment "eng:Encoder:${ENCODERVERSION} ${ENCODEROPTS}"
 )
 }
