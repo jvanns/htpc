@@ -6,18 +6,18 @@ SELF="$0"
 MODE="${1:-}"
 
 format_files() {
-	while IFS=$'|' read encoder file format lang channels bdepth brate
+	while IFS=$'|' read encoder file album artist title format bdepth brate
 	do
-		mediainfo --Inform='General;%Album%|%Performer%|%Track name' "$file"
-	done
+		echo -e "$file\t$album"
+	done | sort -t $'\t' -k2
 }
 
 identify_files() {
 	for f in "$@"
 	do
 cat <<EOF | mediainfo --Inform='file:///dev/stdin' "$f"
-General;%Encoded_Library%|%CompleteName%|
-Audio;%Format%|%Language%|%Channels%|%BitDepth%|%BitRate%
+General;%Encoded_Library%|%CompleteName%|%Album%|%Performer%|%Track name%|
+Audio;%Format%|%BitDepth%|%BitRate%
 EOF
 	done | grep -iv '^itunes.*|/' | format_files
 }
