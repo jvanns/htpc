@@ -44,7 +44,7 @@ format_files() {
 		# Follow the same format as OUTPUTFORMAT in abcde.conf
 		suffix="`munge $title`"
 		prefix="`munge $album`/`munge $artist`"
-		echo install -D "$file" "./${prefix}/${suffix}.${file#*.}"
+		install -D "$file" "./${prefix}/${suffix}.${file#*.}"
 	done
 }
 
