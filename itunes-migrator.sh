@@ -13,10 +13,32 @@ munge()
 }
 
 format_files() {
+	local e=0
+
 	while IFS=$'|' read enclib encapp file album artist title format bdep brat
 	do
 		if [[ "$enclib" =~ ^itunes ]] || [[ "$encapp" =~ ^itunes ]]; then
 			continue
+		fi
+
+		if [ "x${album}" = "x" ]; then
+			echo -e "ERR_NO_ALBUM\t$file\t$artist\t$title" >&2
+			e=1
+		fi
+
+		if [ "x${artist}" = "x" ]; then
+			echo -e "ERR_NO_ARTIST\t$file\t$album\t$title" >&2
+			e=1
+		fi
+
+		if [ "x${title}" = "x" ]; then
+			echo -e "ERR_NO_TITLE\t$file\t$album\t$artist" >&2
+			e=1
+		fi
+
+		if [ $e -eq 1 ]; then 
+			e=0
+         continue
 		fi
 
 		# Follow the same format as OUTPUTFORMAT in abcde.conf
