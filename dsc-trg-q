@@ -125,14 +125,21 @@ embed_album_art() {
 }
 
 map_genre() {
-	f="`ls -1 $1/* | head -n1`"
+	f="`ls -1 $1/* | head -n1`" # A single file from the album
+	tg="`mediainfo --Inform='General;%Genre%' $f`" # Current tagged genre
+	mg="`id3map genre $tg`" # Remapped genre
+
+	[ "x${mg}" = "x" ] && return 0 # No mapping
+
+	find "$1" -type f -name "*.${OUTPUTTYPE}" -print0 \
+	| xargs -0 -- eyeD3 -2 -G "$mg"
 }
 
 tag_audio_files() {
 	# The mindepth must match the path structure in abcde.conf
 	local p="`find $1 -depth -mindepth 2 -type d -newer $2`"
 
-	embed_encoder_opts "$p" && embed_album_art "$p"
+	embed_encoder_opts "$p" && embed_album_art "$p" && map_genre "$p"
 }
 
 extract_and_encode_tracks() {
