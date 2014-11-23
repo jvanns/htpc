@@ -137,7 +137,7 @@ map_genre() {
 
 tag_audio_files() {
 	# The mindepth must match the path structure in abcde.conf
-	local p="`find $1 -depth -mindepth 2 -type d -newer $2`"
+	local p="`find $1 -depth -mindepth 3 -type d -newer $2`"
 
 	embed_encoder_opts "$p" && embed_album_art "$p" && map_genre "$p"
 }

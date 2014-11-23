@@ -15,7 +15,7 @@ munge()
 format_files() {
 	local e=0
 
-	while IFS=$'|' read enclib encapp file album artist title format bdep brat
+	while IFS=$'|' read enclib encapp file genre album artist title format bdep brat
 	do
 		if [[ "$enclib" =~ ^itunes ]] || [[ "$encapp" =~ ^itunes ]]; then
 			continue
@@ -36,14 +36,19 @@ format_files() {
 			e=1
 		fi
 
+		if [ "x${genre}" = "x" ]; then
+			echo -e "ERR_NO_GENRE\t$file\t$album\t$artist\t$title" >&2
+			e=1
+		fi
+
 		if [ $e -eq 1 ]; then 
 			e=0
-         continue
+			continue
 		fi
 
 		# Follow the same format as OUTPUTFORMAT in abcde.conf
 		suffix="`munge $title`"
-		prefix="`munge $album`/`munge $artist`"
+		prefix="`munge $genre`/`munge $artist`/`munge $album`"
 		install -D "$file" "./${prefix}/${suffix}.${file#*.}"
 	done
 }
@@ -61,15 +66,16 @@ bootstrap_migration() {
 	local l=64
 	local p=`getconf _NPROCESSORS_ONLN`
 
-	echo -ne 'General;%Encoded_Library%|%Encoded_Application%|' > "$INFO_FILE"
-	echo -e  '%CompleteName%|%Album%|%Performer%|%Track%|'      >> "$INFO_FILE"
-	echo -e  'Audio;%Format%|%BitDepth%|%BitRate%'              >> "$INFO_FILE"
+	echo -n 'General;%Encoded_Library%|%Encoded_Application%|' > "$INFO_FILE"
+	echo '%CompleteName%|%Genre%|%Album%|%Performer%|%Track%|' >> "$INFO_FILE"
+	echo 'Audio;%Format%|%BitDepth%|%BitRate%'                 >> "$INFO_FILE"
 
 	trap "rm -f $INFO_FILE" EXIT
 
 	cd "$2"
 	find "$1" -type f \
 		\! -name '*.mp4' \
+		\! -name '*.m4v' \
 		-print0 \
 	| xargs -0 -P$p -n$l -- $SELF zygote
 }
