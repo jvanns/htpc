@@ -119,9 +119,7 @@ embed_encoder_opts() {
 }
 
 embed_album_art() {
-	local p="$OLDPWD"
-
-	cd "$1" && cd ../ && embed-album-art "${1##*/}" && cd "$p"
+	embed-album-art "$1"
 }
 
 map_genre() {
@@ -137,9 +135,11 @@ map_genre() {
 
 tag_audio_files() {
 	# The mindepth must match the path structure in abcde.conf
-	local p="`find $1 -depth -mindepth 3 -type d -newer $2`"
+	local p="`find $1 -depth -mindepth 3 -type d -newer $2`" # Absolute path
+	local s="${p##*/}" # Album name suffix
 
-	embed_encoder_opts "$p" && embed_album_art "$p" && map_genre "$p"
+	cd "$p" && cd ../ || return 1
+	embed_encoder_opts "$s" && embed_album_art "$s" && map_genre "$s"
 }
 
 extract_and_encode_tracks() {
