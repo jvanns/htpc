@@ -23,7 +23,7 @@ then
 	exit 1
 fi
 
-declare -a TOOLS=(perl eyeD3 xmllint wget)
+declare -a TOOLS=(perl eyeD3 wget)
 for t in ${TOOLS[@]}
 do
 	if [ ! -x "`which $t 2> /dev/null`" ]
@@ -36,15 +36,13 @@ done
 IMG="${TMP:-/tmp}/album-art.jpg"
 PAGE='http://www.albumart.org/index.php'
 ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "${1// /+}"`"
-URL="${PAGE}?searchkey=$ESCAPED&itempage=1&newsearch=1&searchindex=Music"
+URL="${PAGE}?searchk=${ESCAPED}&itempage=1&newsearch=1&searchindex=Music"
 
 echo "Searching for: [$1]"
 echo "Searching ... [$URL]"
 
-XMLCMD='xmllint --html --xpath'
-AMAZON='http://ecx.images-amazon.com'
-COVERURL=`wget -qO - "$URL" | $XMLCMD \
-'string(//a[@title="View larger image" and starts-with(@href, "'$AMAZON'")]/@href)' - 2> /dev/null`
+COVERURL=`wget -qO - "$URL" | grep -m1 -E -o \
+"http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"`
 
 if [ "x$COVERURL" = "x" ]
 then
