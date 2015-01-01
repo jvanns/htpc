@@ -110,27 +110,33 @@ extract_titles() {
 }
 
 embed_encoder_opts() {
-# Do this in a sub-shell as we don't want to pollute the environment ;)
-(
-	. /etc/abcde.conf
-	find "$1" -type f -name "*.${OUTPUTTYPE}" -print0 \
-	| xargs -0 -- eyeD3 -2 --comment "eng:Encoder:${ENCODERVERSION} ${ENCODEROPTS}"
-)
+	find "$1" -type f -name "*.${OUTPUTTYPE}" -print0 | xargs -0 -- \
+	eyeD3 -2 --comment "eng:Encoder:${ENCODERVERSION} ${ENCODEROPTS}"
 }
 
 embed_album_art() {
 	embed-album-art "$1"
 }
 
+mv_genre() {
+	p="$1"/`mungegenre "$2"`/"$3"
+
+	mkdir -m 0755 -p "$p" || return 1
+	mv -f "$4" "$p"
+}
+
 map_genre() {
-	f="`ls -1 $1/* | head -n1`" # A single file from the album
-	tg="`mediainfo --Inform='General;%Genre%' $f`" # Current tagged genre
-	mg="`id3map genre $tg`" # Remapped genre
+	fn=`ls -xtr1 "$1"/*.${OUTPUTTYPE} 2> /dev/null | head -n1` # Filename
+	tg=`mediainfo --Inform='General;%Genre%' "$fn"` # Current tagged genre
+	mg=`id3map genre "$tg"` # Remapped genre
+	px=`readlink -f ../../` # Path prefix
 
 	[ "x${mg}" = "x" ] && return 0 # No mapping
 
-	find "$1" -type f -name "*.${OUTPUTTYPE}" -print0 \
-	| xargs -0 -- eyeD3 -2 -G "$mg"
+	find "$1" -type f -name "*.${OUTPUTTYPE}" -print0 | xargs -0 -- \
+	eyeD3 -2 -G "$mg"
+
+	mv_genre "$px" "$mg" "${PWD##*/}" "${PWD}/${1}"
 }
 
 tag_audio_files() {
@@ -139,6 +145,10 @@ tag_audio_files() {
 	local s="${p##*/}" # Album name suffix
 
 	cd "$p" && cd ../ || return 1
+
+	# Prepare the environment
+	. /etc/abcde.conf
+
 	embed_encoder_opts "$s" && embed_album_art "$s" && map_genre "$s"
 }
 
