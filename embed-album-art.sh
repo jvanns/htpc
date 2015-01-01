@@ -42,7 +42,7 @@ echo "Searching for: [$1]"
 echo "Searching ... [$URL]"
 
 XMLCMD='xmllint --html --xpath'
-AMAZON='http://ecx.images-amazon'
+AMAZON='http://ecx.images-amazon.com'
 COVERURL=`wget -qO - "$URL" | $XMLCMD \
 'string(//a[@title="View larger image" and starts-with(@href, "'$AMAZON'")]/@href)' - 2> /dev/null`
 
