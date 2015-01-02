@@ -11,7 +11,7 @@
 
 if [ "x$1" = "x" ]
 then
-	echo "Provide a target album-named directory" >&2
+	echo "Provide a target album-named, relative directory" >&2
 	exit 1
 fi
 
@@ -33,12 +33,13 @@ do
 	fi
 done
 
+ALBUM="${PWD##*/} $1"
 IMG="${TMP:-/tmp}/album-art.jpg"
 PAGE='http://www.albumart.org/index.php'
-ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "${1// /+}"`"
+ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "${ALBUM// /+}"`"
 URL="${PAGE}?searchk=${ESCAPED}&itempage=1&newsearch=1&searchindex=Music"
 
-echo "Searching for: [$1]"
+echo "Searching for: [$ALBUM]"
 echo "Searching ... [$URL]"
 
 COVERURL=`wget -qO - "$URL" | grep -m1 -E -o \
@@ -46,7 +47,7 @@ COVERURL=`wget -qO - "$URL" | grep -m1 -E -o \
 
 if [ "x$COVERURL" = "x" ]
 then
-	echo "Failed to find album art for $1" >&2
+	echo "Failed to find album art for $ALBUM" >&2
 	exit 1
 fi
 
@@ -55,5 +56,5 @@ wget -qO - "$COVERURL" 1> "$IMG"
 [ $? -ne 0 ] && [ ! -s "$IMG" ] && exit 1
 
 echo "Embedding ... [`stat -c %s $IMG` bytes]"
-find "$1" -type f -name '*.mp3' -print0 \
-| xargs -0 -- eyeD3 -2 --add-image="${IMG}:FRONT_COVER"
+find "$1" -type f -name '*.mp3' -print0 | xargs -0 -I % -- sh -c \
+"eyeD3 -2 --remove-images '%';eyeD3 -2 --add-image='${IMG}:FRONT_COVER' '%'"
