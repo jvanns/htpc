@@ -38,16 +38,18 @@ PP=`pwd`
 # Grandparent Path
 GPP=`readlink -f "${PWD}/../"`
 
+ALBUM=`echo "$1" | sed 's/ [[(][Dd]is[ck] [0-9][])]$//'`
 ARTIST="${PP##*/}"
 GENRE="${GPP##*/}"
-ALBUM=`echo "$1" | sed 's/ [[(][Dd]is[ck] [0-9][])]$//'`
+TERM="$ALBUM"
 
 if [ "$GENRE" = 'soundtrack' ]; then
-	QUERY="`echo $ALBUM $GENRE | tr ' ' '+'`"
-else
-	QUERY="`echo $ARTIST $ALBUM | tr ' ' '+'`"
+	TERM="$ALBUM $GENRE"
+elif [ "$ARTIST" != 'compilations' ]; then
+	TERM="$ARTIST $ALBUM"
 fi
 
+QUERY="${TERM// /+}"
 IMG="${TMP:-/tmp}/album-art.jpg"
 PAGE='http://www.albumart.org/index.php'
 ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' $QUERY`"
