@@ -33,9 +33,9 @@ do
 	fi
 done
 
-ALBUM="${PWD##*/} $1"
 IMG="${TMP:-/tmp}/album-art.jpg"
 PAGE='http://www.albumart.org/index.php'
+ALBUM="`echo ${PWD##*/} $1 | tr -d '()[]'`"
 ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "${ALBUM// /+}"`"
 URL="${PAGE}?searchk=${ESCAPED}&itempage=1&newsearch=1&searchindex=Music"
 
