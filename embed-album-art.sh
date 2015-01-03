@@ -33,13 +33,25 @@ do
 	fi
 done
 
+PP="$PWD" # Parent Path
+GPP="`readlink -f ${PWD}/../`" # Grandparent Path
+
+ALBUM="$1"
+ARTIST="${PP##*/}"
+GENRE="${GPP##*/}"
+
+if [ "$GENRE" = 'soundtrack' ]; then
+	QUERY="`echo $ALBUM $GENRE | tr -d '()[]'`"
+else
+	QUERY="`echo $ARTIST $ALBUM | tr -d '()[]'`"
+fi
+
 IMG="${TMP:-/tmp}/album-art.jpg"
 PAGE='http://www.albumart.org/index.php'
-ALBUM="`echo ${PWD##*/} $1 | tr -d '()[]'`"
-ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "${ALBUM// /+}"`"
+ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "${QUERY// /+}"`"
 URL="${PAGE}?searchk=${ESCAPED}&itempage=1&newsearch=1&searchindex=Music"
 
-echo "Searching for: [$ALBUM]"
+echo "Searching for: [$QUERY]"
 echo "Searching ... [$URL]"
 
 COVERURL=`wget -qO - "$URL" | grep -m1 -E -o \
@@ -47,7 +59,7 @@ COVERURL=`wget -qO - "$URL" | grep -m1 -E -o \
 
 if [ "x$COVERURL" = "x" ]
 then
-	echo "Failed to find album art for $ALBUM" >&2
+	echo "Failed to find album art for $QUERY" >&2
 	exit 1
 fi
 
