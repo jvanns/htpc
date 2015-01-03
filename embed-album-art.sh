@@ -33,22 +33,24 @@ do
 	fi
 done
 
-PP="$PWD" # Parent Path
-GPP="`readlink -f ${PWD}/../`" # Grandparent Path
+# Parent Path
+PP=`pwd`
+# Grandparent Path
+GPP=`readlink -f "${PWD}/../"`
 
-ALBUM="$1"
 ARTIST="${PP##*/}"
 GENRE="${GPP##*/}"
+ALBUM=`echo "$1" | sed 's/ [[(][Dd]is[ck] [0-9][])]$//'`
 
 if [ "$GENRE" = 'soundtrack' ]; then
-	QUERY="`echo $ALBUM $GENRE | tr -d '()[]'`"
+	QUERY="`echo $ALBUM $GENRE | tr ' ' '+'`"
 else
-	QUERY="`echo $ARTIST $ALBUM | tr -d '()[]'`"
+	QUERY="`echo $ARTIST $ALBUM | tr ' ' '+'`"
 fi
 
 IMG="${TMP:-/tmp}/album-art.jpg"
 PAGE='http://www.albumart.org/index.php'
-ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "${QUERY// /+}"`"
+ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' $QUERY`"
 URL="${PAGE}?searchk=${ESCAPED}&itempage=1&newsearch=1&searchindex=Music"
 
 echo "Searching for: [$QUERY]"
