@@ -149,7 +149,7 @@ tag_audio_files() {
 	# Prepare the environment
 	. /etc/abcde.conf
 
-	embed_encoder_opts "$s" && embed_album_art "$s" && map_genre "$s"
+	embed_encoder_opts "$s" && map_genre "$s" && embed_album_art "$s"
 }
 
 extract_and_encode_tracks() {
