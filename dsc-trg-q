@@ -120,9 +120,7 @@ embed_album_art() {
 
 mv_genre() {
 	p="$1"/`mungegenre "$2"`/"$3"
-
-	mkdir -m 0755 -p "$p" || return 1
-	mv -f "$4" "$p"
+	mkdir -m 0755 -p "$p" && mv -f "$4" "$p"
 }
 
 map_genre() {
