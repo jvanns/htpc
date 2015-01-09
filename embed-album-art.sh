@@ -38,37 +38,41 @@ PP=`pwd`
 # Grandparent Path
 GPP=`readlink -f "${PWD}/../"`
 
+# Optional cover index
+INDEX=${2:-1}
+
+# Optional result page from which to choose cover
+PAGE=${3:-1}
+
 ALBUM=`echo "$1" | sed 's/ [[(][Dd]is[ck] [0-9][])]$//'`
 ARTIST="${PP##*/}"
 GENRE="${GPP##*/}"
-TERM="$ALBUM"
+TERM="${ALBUM%/}"
 
 if [ "$GENRE" = 'soundtrack' ]; then
-	TERM="$ALBUM $GENRE"
+	TERM="${ALBUM%/} $GENRE"
 elif [ "$ARTIST" != 'compilations' ]; then
-	TERM="$ARTIST $ALBUM"
+	TERM="$ARTIST ${ALBUM%/}"
 fi
 
-QUERY="${TERM// /+}"
 IMG="${TMP:-/tmp}/album-art.jpg"
-PAGE='http://www.albumart.org/index.php'
-ESCAPED="`perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' $QUERY`"
-URL="${PAGE}?searchk=${ESCAPED}&itempage=1&newsearch=1&searchindex=Music"
+QUERY=`perl -MURI::Escape -e "print uri_escape('$TERM');"`
+URL="http://www.albumart.org/index.php?searchindex=Music&searchk=${QUERY}&itempage=${PAGE}"
 
 echo "Searching for: [$QUERY]"
 echo "Searching ... [$URL]"
 
-COVERURL=`wget -qO - "$URL" | grep -m1 -E -o \
-"http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"`
+declare -a COVERURLS=(`wget -qO - "$URL" | grep -E -o \
+"http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"`)
 
-if [ "x$COVERURL" = "x" ]
+if [ ${#COVERURLS[@]} -eq 0 ]
 then
-	echo "Failed to find album art for $QUERY" >&2
+	echo "Failed to find album art for $1" >&2
 	exit 1
 fi
 
-echo "Cover URL: [$COVERURL]"
-wget -qO - "$COVERURL" 1> "$IMG"
+echo "Cover URL: [${COVERURLS[$(($INDEX - 1))]}]"
+wget -qO - "${COVERURLS[$(($INDEX - 1))]}" 1> "$IMG"
 [ $? -ne 0 ] && [ ! -s "$IMG" ] && exit 1
 
 echo "Embedding ... [`stat -c %s $IMG` bytes]"
