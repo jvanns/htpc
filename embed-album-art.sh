@@ -9,6 +9,31 @@
 # the ID3v2 APIC frame, into every file beneath the given directory.
 #
 
+PAGE=1
+INDEX=1
+
+while getopts 'p:i:h' OPTION; do
+   case $OPTION in
+   p)
+      PAGE="$OPTARG"
+      ;;
+   i)
+      INDEX="$OPTARG"
+      ;;
+   h)
+      echo -e "Usage: $0 [options] <album directory>\nOptions:"
+      echo -e "   -h                 Help! Print this message then exit"
+      echo -e "   -p <page number>   Result page to choose album art from"
+      echo -e "   -i <index>         Index of cover choice from results page"
+      exit 0
+      ;;
+   ?)
+      exit 1
+      ;;
+   esac
+done
+shift $(($OPTIND - 1))
+
 if [ "x$1" = "x" ]
 then
 	echo "Provide a target album-named, relative directory" >&2
@@ -37,12 +62,6 @@ done
 PP=`pwd`
 # Grandparent Path
 GPP=`readlink -f "${PWD}/../"`
-
-# Optional cover index
-INDEX=${2:-1}
-
-# Optional result page from which to choose cover
-PAGE=${3:-1}
 
 ALBUM=`echo "$1" | sed 's/ [[(][Dd]is[ck] [0-9][])]$//'`
 ARTIST="${PP##*/}"
