@@ -77,7 +77,7 @@ fi
 IMG="${TMP:-/tmp}/album-art.jpg"
 QUERY=`perl -MURI::Escape -e "print uri_escape('$TERM');"`
 PATTERN='<a href="http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"'
-URL="http://www.albumart.org/index.php?searchindex=Music&searchk=${QUERY}&itempage=${PAGE}"
+URL="albumart.org/index.php?searchindex=Music&searchk=${QUERY}&itempage=${PAGE}"
 
 echo "Searching for: [$QUERY]"
 echo "Searching ... [$URL]"
