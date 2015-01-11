@@ -11,9 +11,13 @@
 
 PAGE=1
 INDEX=1
+COUNTRY='gb'
 
-while getopts 'p:i:h' OPTION; do
+while getopts 'c:p:i:h' OPTION; do
 	case $OPTION in
+	c)
+		COUNTRY="$OPTARG"
+		;;
 	p)
 		PAGE="$OPTARG"
 		;;
@@ -24,6 +28,7 @@ while getopts 'p:i:h' OPTION; do
 		echo -e "Usage: $0 [options] <album directory>\nOptions:"
 		echo -e "   -h                 Help! Print this message then exit"
 		echo -e "   -p <page number>   Result page to choose album art from"
+		echo -e "   -c <country>       Set the country for album art choice"
 		echo -e "   -i <index>         Index of cover choice from results page"
 		exit 0
 		;;
@@ -82,7 +87,7 @@ PATTERN='<a href="http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"'
 URL="${DOMAIN}/index.php?searchindex=Music&searchk=${QUERY}&itempage=${PAGE}"
 
 # Set a cookie to set our locale/country for albumart.org
-curl -s -c "$COOKIE" -o /dev/null "${DOMAIN}/gb"
+curl -s -c "$COOKIE" -o /dev/null "${DOMAIN}/${COUNTRY}"
 
 echo "Searching for: [$QUERY]"
 echo "Searching ... [$URL]"
