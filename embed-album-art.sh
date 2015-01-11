@@ -74,16 +74,21 @@ elif [ "$ARTIST" != 'compilations' ]; then
 	TERM="$ARTIST ${ALBUM%/}"
 fi
 
+DOMAIN='www.albumart.org'
 IMG="${TMP:-/tmp}/album-art.jpg"
+COOKIE="${TMP:-/tmp}/curl-cookie.db"
 QUERY=`perl -MURI::Escape -e "print uri_escape('$TERM');"`
 PATTERN='<a href="http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"'
-URL="albumart.org/index.php?searchindex=Music&searchk=${QUERY}&itempage=${PAGE}"
+URL="${DOMAIN}/index.php?searchindex=Music&searchk=${QUERY}&itempage=${PAGE}"
+
+# Set a cookie to set our locale/country for albumart.org
+curl -s -c "$COOKIE" -o /dev/null "${DOMAIN}/gb"
 
 echo "Searching for: [$QUERY]"
 echo "Searching ... [$URL]"
 
 declare -a COVERURLS=(`\
-	curl -s "$URL" | \
+	curl -s -b "$COOKIE" "$URL" | \
 	grep -Eo "$PATTERN" | \
 	sed -E 's/^<a href="(.*)"$/\1/'\
 `)
@@ -95,7 +100,7 @@ then
 fi
 
 echo "Cover URL: [${COVERURLS[$(($INDEX - 1))]}]"
-curl -s -o "$IMG" "${COVERURLS[$(($INDEX - 1))]}"
+curl -s -b "$COOKIE" -o "$IMG" "${COVERURLS[$(($INDEX - 1))]}"
 [ $? -ne 0 ] && [ ! -s "$IMG" ] && exit 1
 
 echo "Embedding ... [`stat -c %s $IMG` bytes]"
