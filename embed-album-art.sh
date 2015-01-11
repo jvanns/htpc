@@ -13,24 +13,24 @@ PAGE=1
 INDEX=1
 
 while getopts 'p:i:h' OPTION; do
-   case $OPTION in
-   p)
-      PAGE="$OPTARG"
-      ;;
-   i)
-      INDEX="$OPTARG"
-      ;;
-   h)
-      echo -e "Usage: $0 [options] <album directory>\nOptions:"
-      echo -e "   -h                 Help! Print this message then exit"
-      echo -e "   -p <page number>   Result page to choose album art from"
-      echo -e "   -i <index>         Index of cover choice from results page"
-      exit 0
-      ;;
-   ?)
-      exit 1
-      ;;
-   esac
+	case $OPTION in
+	p)
+		PAGE="$OPTARG"
+		;;
+	i)
+		INDEX="$OPTARG"
+		;;
+	h)
+		echo -e "Usage: $0 [options] <album directory>\nOptions:"
+		echo -e "   -h                 Help! Print this message then exit"
+		echo -e "   -p <page number>   Result page to choose album art from"
+		echo -e "   -i <index>         Index of cover choice from results page"
+		exit 0
+		;;
+	?)
+		exit 1
+		;;
+	esac
 done
 shift $(($OPTIND - 1))
 
@@ -82,7 +82,11 @@ URL="albumart.org/index.php?searchindex=Music&searchk=${QUERY}&itempage=${PAGE}"
 echo "Searching for: [$QUERY]"
 echo "Searching ... [$URL]"
 
-declare -a COVERURLS=(`curl -s "$URL" | grep -Eo "$PATTERN" | sed -E 's/^<a href="(.*)"$/\1/'`)
+declare -a COVERURLS=(`\
+	curl -s "$URL" | \
+	grep -Eo "$PATTERN" | \
+	sed -E 's/^<a href="(.*)"$/\1/'\
+`)
 
 if [ ${#COVERURLS[@]} -eq 0 ]
 then
