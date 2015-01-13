@@ -12,11 +12,15 @@
 PAGE=1
 INDEX=1
 COUNTRY='gb'
+COVERURL=
 
-while getopts 'c:p:i:h' OPTION; do
+while getopts 'u:c:p:i:h' OPTION; do
 	case $OPTION in
 	c)
 		COUNTRY="$OPTARG"
+		;;
+	u)
+		COVERURL="$OPTARG"
 		;;
 	p)
 		PAGE="$OPTARG"
@@ -27,6 +31,7 @@ while getopts 'c:p:i:h' OPTION; do
 	h)
 		echo -e "Usage: $0 [options] <album directory>\nOptions:"
 		echo -e "   -h                 Help! Print this message then exit"
+		echo -e "   -u <url>           Provide an alternative download URL"
 		echo -e "   -p <page number>   Result page to choose album art from"
 		echo -e "   -c <country>       Set the country for album art choice"
 		echo -e "   -i <index>         Index of cover choice from results page"
@@ -63,10 +68,14 @@ do
 	fi
 done
 
+# Path
+P="$1"
 # Parent Path
 PP=`pwd`
 # Grandparent Path
 GPP=`readlink -f "${PWD}/../"`
+
+IMG="${TMP:-/tmp}/album-art.jpg"
 
 ALBUM=`echo "$1" | sed 's/ [[(][Dd]is[ck] [0-9][])]$//'`
 ARTIST="${PP##*/}"
@@ -79,35 +88,61 @@ elif [ "$ARTIST" != 'compilations' ]; then
 	TERM="$ARTIST ${ALBUM%/}"
 fi
 
-DOMAIN='www.albumart.org'
-IMG="${TMP:-/tmp}/album-art.jpg"
-COOKIE="${TMP:-/tmp}/curl-cookie.db"
-QUERY=`perl -MURI::Escape -e "print uri_escape('$TERM');"`
-PATTERN='<a href="http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"'
-URL="${DOMAIN}/index.php?searchindex=Music&searchk=${QUERY}&itempage=${PAGE}"
+embed_img() {
+	echo "Embedding ... [`stat -c %s $IMG` bytes]"
+	find "$1" -type f -name '*.mp3' -print0 | xargs -0 -I % -- sh -c \
+	"eyeD3 -2 --remove-images '%';eyeD3 -2 --add-image='${IMG}:FRONT_COVER' '%'"
+}
 
-# Set a cookie to set our locale/country for albumart.org
-curl -s -c "$COOKIE" -o /dev/null "${DOMAIN}/${COUNTRY}"
+download_img() {
+	echo "Cover URL: [${1}]"
+	curl -s -o "$IMG" "$1"
+	[ $? -eq 0 ] && [ -s "$IMG" ] && return 0
 
-echo "Searching for: [$QUERY]"
-echo "Searching ... [$URL]"
+	return 1
+}
 
-declare -a COVERURLS=(`\
-	curl -s -b "$COOKIE" "$URL" | \
-	grep -Eo "$PATTERN" | \
-	sed -E 's/^<a href="(.*)"$/\1/'\
-`)
+# The short variable names are;
+# c = Cover URLs (an array)
+# d = Domain
+# o = Cookie
+# q = Query
+# u = URL
+# p = Pattern
+search_img() {
+	local -a c=()
+	d='www.albumart.org'
+	o="${TMP:-/tmp}/curl-cookie.db"
+	q=`perl -MURI::Escape -e "print uri_escape('$1');"`
+	u="${d}/index.php?searchindex=Music&searchk=${q}&itempage=${PAGE}"
+	p='<a href="http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"'
 
-if [ ${#COVERURLS[@]} -eq 0 ]
+	# Set a cookie to set our locale/country for albumart.org
+	curl -s -c "$o" -o /dev/null "${d}/${COUNTRY}"
+
+	echo "Searching for: [$1]"
+	echo "Searching ... [$u]"
+
+	c=(`\
+		curl -s -b "$o" "$u" | \
+		grep -Eo "$p" | \
+		sed -E 's/^<a href="(.*)"$/\1/' \
+	`)
+
+	if [ ${#c[@]} -eq 0 ]
+	then
+		echo "Failed to find album art for $1" >&2
+		return 1
+	fi
+
+	COVERURL="${c[$(($INDEX - 1))]}"
+}
+
+if [ "x${COVERURL}" = "x" ]
 then
-	echo "Failed to find album art for $1" >&2
-	exit 1
+	search_img "$TERM"
+	[ $? -ne 0 ] && exit 1
 fi
 
-echo "Cover URL: [${COVERURLS[$(($INDEX - 1))]}]"
-curl -s -b "$COOKIE" -o "$IMG" "${COVERURLS[$(($INDEX - 1))]}"
-[ $? -ne 0 ] && [ ! -s "$IMG" ] && exit 1
-
-echo "Embedding ... [`stat -c %s $IMG` bytes]"
-find "$1" -type f -name '*.mp3' -print0 | xargs -0 -I % -- sh -c \
-"eyeD3 -2 --remove-images '%';eyeD3 -2 --add-image='${IMG}:FRONT_COVER' '%'"
+download_img "$COVERURL"
+embed_img "$P"
