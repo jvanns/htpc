@@ -12,12 +12,18 @@
 PAGE=1
 INDEX=1
 COUNTRY='gb'
+
+# These default to empty as they are generally discovered during search
+IMG=
 COVERURL=
 
-while getopts 'u:c:p:i:h' OPTION; do
+while getopts 'g:u:c:p:i:h' OPTION; do
 	case $OPTION in
 	c)
 		COUNTRY="$OPTARG"
+		;;
+	g)
+		IMG="$OPTARG"
 		;;
 	u)
 		COVERURL="$OPTARG"
@@ -31,6 +37,7 @@ while getopts 'u:c:p:i:h' OPTION; do
 	h)
 		echo -e "Usage: $0 [options] <album directory>\nOptions:"
 		echo -e "   -h                 Help! Print this message then exit"
+		echo -e "   -g <image path>    Embed this image, do not download"
 		echo -e "   -u <url>           Provide an alternative download URL"
 		echo -e "   -p <page number>   Result page to choose album art from"
 		echo -e "   -c <country>       Set the country for album art choice"
@@ -75,6 +82,24 @@ PP=`pwd`
 # Grandparent Path
 GPP=`readlink -f "${PWD}/../"`
 
+embed_img() {
+	echo "Embedding ... [`stat -c %s $IMG` bytes]"
+	find "$1" -type f -name '*.mp3' -print0 | xargs -0 -I % -- sh -c \
+	"eyeD3 -2 --remove-images '%';eyeD3 -2 --add-image='${IMG}:FRONT_COVER' '%'"
+}
+
+if [ "x${IMG}" != "x" ]
+then
+	if [ ! -r "$IMG" ]
+	then
+		echo "'$IMG' not a file or cannot be read" >&2
+		exit 1
+	fi
+
+	embed_img "$P"
+	exit $?
+fi
+
 IMG="${TMP:-/tmp}/album-art.jpg"
 
 ALBUM=`echo "$1" | sed 's/ [[(][Dd]is[ck] [0-9][])]$//'`
@@ -87,12 +112,6 @@ if [ "$GENRE" = 'soundtrack' ]; then
 elif [ "$ARTIST" != 'compilations' ]; then
 	TERM="$ARTIST ${ALBUM%/}"
 fi
-
-embed_img() {
-	echo "Embedding ... [`stat -c %s $IMG` bytes]"
-	find "$1" -type f -name '*.mp3' -print0 | xargs -0 -I % -- sh -c \
-	"eyeD3 -2 --remove-images '%';eyeD3 -2 --add-image='${IMG}:FRONT_COVER' '%'"
-}
 
 download_img() {
 	echo "Cover URL: [${1}]"
