@@ -9,6 +9,7 @@
 # the ID3v2 APIC frame, into every file beneath the given directory.
 #
 
+# Default search parameters
 PAGE=1
 INDEX=1
 COUNTRY='gb'
@@ -19,14 +20,14 @@ COVERURL=
 
 while getopts 'g:u:c:p:i:h' OPTION; do
 	case $OPTION in
-	c)
-		COUNTRY="$OPTARG"
-		;;
 	g)
 		IMG="$OPTARG"
 		;;
 	u)
 		COVERURL="$OPTARG"
+		;;
+	c)
+		COUNTRY="$OPTARG"
 		;;
 	p)
 		PAGE="$OPTARG"
@@ -39,8 +40,9 @@ while getopts 'g:u:c:p:i:h' OPTION; do
 		echo -e "   -h                 Help! Print this message then exit"
 		echo -e "   -g <image path>    Embed this image, do not download"
 		echo -e "   -u <url>           Provide an alternative download URL"
-		echo -e "   -p <page number>   Result page to choose album art from"
+		echo -e "----- search parameters only -----"
 		echo -e "   -c <country>       Set the country for album art choice"
+		echo -e "   -p <page number>   Result page to choose album art from"
 		echo -e "   -i <index>         Index of cover choice from results page"
 		exit 0
 		;;
