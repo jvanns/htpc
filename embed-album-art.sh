@@ -51,16 +51,14 @@ while getopts 'g:u:c:p:i:h' OPTION; do
 done
 shift $(($OPTIND - 1))
 
-if [ "x$1" = "x" ]
-then
+if [ "x$1" = "x" ]; then
 	echo "Provide a target album-named, relative directory" >&2
 	exit 1
 fi
 
 set -eu
 
-if [ ! -d "$1" ]
-then
+if [ ! -d "$1" ]; then
 	echo "'$1' not a directory" >&2
 	exit 1
 fi
@@ -68,8 +66,7 @@ fi
 declare -a TOOLS=(perl eyeD3 curl)
 for t in ${TOOLS[@]}
 do
-	if [ ! -x "`which $t 2> /dev/null`" ]
-	then
+	if [ ! -x "`which $t 2> /dev/null`" ]; then
 		echo "Required tool '$t' not found or not executable" >&2
 		exit 1
 	fi
@@ -88,10 +85,8 @@ embed_img() {
 	"eyeD3 -2 --remove-images '%';eyeD3 -2 --add-image='${IMG}:FRONT_COVER' '%'"
 }
 
-if [ "x${IMG}" != "x" ]
-then
-	if [ ! -r "$IMG" ]
-	then
+if [ "x${IMG}" != "x" ]; then
+	if [ ! -r "$IMG" ]; then
 		echo "'$IMG' not a file or cannot be read" >&2
 		exit 1
 	fi
@@ -148,8 +143,7 @@ search_img() {
 		sed -E 's/^<a href="(.*)"$/\1/' \
 	`)
 
-	if [ ${#c[@]} -eq 0 ]
-	then
+	if [ ${#c[@]} -eq 0 ]; then
 		echo "Failed to find album art for $1" >&2
 		return 1
 	fi
@@ -157,8 +151,7 @@ search_img() {
 	COVERURL="${c[$(($INDEX - 1))]}"
 }
 
-if [ "x${COVERURL}" = "x" ]
-then
+if [ "x${COVERURL}" = "x" ]; then
 	search_img "$TERM"
 	[ $? -ne 0 ] && exit 1
 fi
