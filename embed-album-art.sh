@@ -97,8 +97,10 @@ if [ "x${IMG}" != "x" ]; then
 	exit $?
 fi
 
+# Set location of resulting image file
 IMG="${TMP:-/tmp}/album-art.jpg"
 
+# Build search term
 ALBUM=`echo "$1" | sed 's/ [[(][Dd]is[ck] [0-9][])]$//'`
 ARTIST="${PP##*/}"
 GENRE="${GPP##*/}"
@@ -119,7 +121,7 @@ download_img() {
 }
 
 # The short variable names are;
-# c = Cover URLs (an array)
+# c = Cover art URLs (an array)
 # d = Domain
 # o = Cookie
 # q = Query
