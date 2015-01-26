@@ -12,7 +12,6 @@
 # Default search parameters
 PAGE=1
 INDEX=1
-COUNTRY='gb'
 
 # These default to empty as they are generally discovered during search
 IMG=
@@ -26,9 +25,6 @@ while getopts 'g:u:c:p:i:h' OPTION; do
 	u)
 		COVERURL="$OPTARG"
 		;;
-	c)
-		COUNTRY="$OPTARG"
-		;;
 	p)
 		PAGE="$OPTARG"
 		;;
@@ -41,7 +37,6 @@ while getopts 'g:u:c:p:i:h' OPTION; do
 		echo -e "   -g <image path>    Embed this image, do not download"
 		echo -e "   -u <url>           Provide an alternative download URL"
 		echo -e "----- search parameters only -----"
-		echo -e "   -c <country>       Set the country for album art choice"
 		echo -e "   -p <page number>   Result page to choose album art from"
 		echo -e "   -i <index>         Index of cover choice from results page"
 		exit 0
