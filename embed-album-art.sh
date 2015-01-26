@@ -123,28 +123,21 @@ download_img() {
 # The short variable names are;
 # c = Cover art URLs (an array)
 # d = Domain
-# o = Cookie
-# q = Query
 # u = URL
 # p = Pattern
 search_img() {
 	local -a c=()
-	d='www.albumart.org'
-	o="${TMP:-/tmp}/curl-cookie.db"
-	q=`perl -MURI::Escape -e "print uri_escape('$1');"`
-	u="${d}/index.php?searchindex=Music&searchk=${q}&itempage=${PAGE}"
-	p='<a href="http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"'
-
-	# Set a cookie to set our locale/country for albumart.org
-	curl -s -c "$o" -o /dev/null "${d}/${COUNTRY}"
+	d='www.seekacover.com'
+	u="${d}/cd/`perl -MURI::Escape -e "print uri_escape('$1');"`/${PAGE}"
+	p='<img src="http://ecx.images-amazon.com/images/I/*/[%0-9a-zA-Z.,-]*.jpg"'
 
 	echo "Searching for: [$1]"
 	echo "Searching ... [$u]"
 
 	c=(`\
-		curl -s -b "$o" "$u" | \
-		grep -Eo "$p" | \
-		sed -E 's/^<a href="(.*)"$/\1/' \
+		curl -s "$u" \
+		grep -Eo "$p" \
+		sed -E 's/^<img src="(.*)"$/\1/' \
 	`)
 
 	if [ ${#c[@]} -eq 0 ]; then
