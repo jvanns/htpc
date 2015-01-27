@@ -130,8 +130,8 @@ search_img() {
 	echo "Searching ... [$u]"
 
 	c=(`\
-		curl -s "$u" \
-		grep -Eo "$p" \
+		curl -s "$u" | \
+		grep -Eo "$p" | \
 		sed -E 's/^<img src="(.*)"$/\1/' \
 	`)
 
