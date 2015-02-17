@@ -4,7 +4,9 @@ set -eu
 
 MODE="${1:-}"
 SELF="`readlink -f $0`"
-INFO_FILE="/tmp/`basename $SELF`.inf"
+NAME="`basename $SELF`"
+INFO_FILE="/tmp/${NAME}.inf"
+COPY_LOG="${HOME}/${NAME}.log"
 
 # A direct copy of the mungefilename() function in abcde.conf
 munge()
@@ -49,7 +51,7 @@ format_files() {
 		# Follow the same format as OUTPUTFORMAT in abcde.conf
 		suffix="`munge $title`"
 		prefix="`munge $genre`/`munge $artist`/`munge $album`"
-		install -D "$file" "./${prefix}/${suffix}.${file#*.}"
+		install -D "$file" "./${prefix}/${suffix}.${file#*.}" | tee -a "$COPY_LOG"
 	done
 }
 
