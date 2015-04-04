@@ -17,6 +17,7 @@ install:
 	install -CD -o root -g root -m 0755 rename-album.sh $(DESTDIR)/usr/local/bin/rename-album
 	install -CD -o root -g root -m 0755 embed-album-art.sh $(DESTDIR)/usr/local/bin/embed-album-art
 	install -CD -o root -g root -m 0755 backup.sh $(DESTDIR)/usr/local/sbin/backup
+	install -CD -o root -g root -m 0755 kodi-tc-purge.sh $(DESTDIR)/usr/local/bin/kodi-tc-purge
 	install -CD -o root -g root -m 0755 itunes-migrator.sh $(DESTDIR)/usr/local/bin/itunes-migrator
 	# Config files etc.
 	install -C -o root -g root -m 0644 host_root/etc/abcde.conf $(DESTDIR)/etc
