@@ -96,7 +96,8 @@ fi
 IMG="${TMP:-/tmp}/album-art.jpg"
 
 # Build search term
-ALBUM=`echo "$1" | sed 's/ [[(][Dd]is[ck] [0-9][])]$//'`
+EXPRESSION=' [[(]\([Dd]is[ck] [0-9]\|[Cc][Dd] [Ss]ingle\)[])]$'
+ALBUM=`echo "$1" | sed "s/$EXPRESSION//"`
 ARTIST="${PP##*/}"
 GENRE="${GPP##*/}"
 TERM="${ALBUM%/}"
