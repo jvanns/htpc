@@ -109,9 +109,10 @@ extract_titles() {
 	done
 }
 
-embed_encoder_opts() {
+embed_encoder_tags() {
 	find "$1" -type f -name "*.${OUTPUTTYPE}" -print0 | xargs -0 -- \
-	eyeD3 -2 --comment "eng:Encoder:${ENCODERVERSION} ${ENCODEROPTS}"
+		eyeD3 -2 "${EXTRA_ENCODER_TAGS[@]}" \
+		--comment "eng:Encoder:${ENCODERVERSION} ${ENCODEROPTS}"
 }
 
 embed_album_art() {
@@ -147,7 +148,7 @@ tag_audio_files() {
 	# Prepare the environment
 	. /etc/abcde.conf
 
-	embed_encoder_opts "$s" && map_genre "$s" && embed_album_art "$s"
+	embed_encoder_tags "$s" && map_genre "$s" && embed_album_art "$s"
 }
 
 extract_and_encode_tracks() {
