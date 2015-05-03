@@ -15,9 +15,10 @@ INDEX=1
 
 # These default to empty as they are generally discovered during search
 IMG=
+QUERY=
 COVERURL=
 
-while getopts 'g:u:c:p:i:h' OPTION; do
+while getopts 'g:u:c:p:i:q:h' OPTION; do
 	case $OPTION in
 	g)
 		IMG="$OPTARG"
@@ -30,6 +31,9 @@ while getopts 'g:u:c:p:i:h' OPTION; do
 		;;
 	i)
 		INDEX="$OPTARG"
+		;;
+	q)
+		QUERY="$OPTARG"
 		;;
 	h)
 		echo -e "Usage: $0 [options] <album directory>\nOptions:"
@@ -145,6 +149,9 @@ search_img() {
 }
 
 if [ "x${COVERURL}" = "x" ]; then
+	if [ "x$QUERY" != "x" ]; then
+		TERM="$QUERY"
+	fi
 	search_img "$TERM"
 	[ $? -ne 0 ] && exit 1
 fi
