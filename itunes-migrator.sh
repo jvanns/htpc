@@ -76,12 +76,15 @@ bootstrap_migration() {
 
 	trap "rm -f $INFO_FILE" EXIT
 
-	cd "$2"
-	find "$1" -type f \
-		\! -name '*.mp4' \
-		\! -name '*.m4v' \
-		-print0 \
-	| xargs -0 -P$p -n$l -- $SELF zygote
+	while read pathname
+	do
+		cd "$2"
+		find "$pathname" -type f \
+			\! -name '*.mp4' \
+			\! -name '*.m4v' \
+			-print0 \
+			| xargs -0 -P$p -n$l -- $SELF zygote
+	done < "$1"
 }
 
 usage() {
