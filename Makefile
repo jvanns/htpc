@@ -19,6 +19,7 @@ install:
 	install -CD -o root -g root -m 0755 backup.sh $(DESTDIR)/usr/local/sbin/backup
 	install -CD -o root -g root -m 0755 kodi-tc-purge.sh $(DESTDIR)/usr/local/bin/kodi-tc-purge
 	install -CD -o root -g root -m 0755 itunes-migrator.sh $(DESTDIR)/usr/local/bin/itunes-migrator
+	install -CD -o root -g root -m 0755 psp-transcoder.sh $(DESTDIR)/usr/local/bin/psp-transcoder
 	# Config files etc.
 	install -C -o root -g root -m 0644 host_root/etc/abcde.conf $(DESTDIR)/etc
 	install -C -o root -g root -m 0644 host_root/etc/dsc-trg.conf $(DESTDIR)/etc
