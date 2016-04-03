@@ -40,12 +40,13 @@ classify_titles() {
 }
 
 bad_disc_label() {
-	local r=0
-	[ "x${ID_FS_LABEL}" = "x" ] && return 1 # Empty
+	local r=1
 
-	case "${ID_FS_LABEL}" in
-	'DVD_VIDEO'|'DVDVIDEO')
-		r=1
+	case "x${ID_FS_LABEL}" in
+	'x'|'xDVD_VIDEO'|'xDVDVIDEO')
+		;;
+	*)
+		r=0
 		;;
 	esac
 
@@ -100,7 +101,7 @@ extract_title() {
 }
 
 extract_titles() {
-	local p="${QUEUE_DIR}/${ID_FS_LABEL}"
+	local p="${QUEUE_DIR}/${PREFERRED_LABEL:-$ID_FS_LABEL}"
 
 	for t in ${TITLES[@]}
 	do
