@@ -139,6 +139,7 @@ if __name__ == '__main__':
         
         # We expect a format of;
         # format,lang,channels,bit depth,bit rate,audio id, stream id
+        promote = 0
         csv = l.split(',')
         csv[0] = csv[0].lower()
         csv[1] = csv[1].lower()
@@ -152,6 +153,13 @@ if __name__ == '__main__':
                 # split in the channel configuration;
                 if i == 0:
                     csv[i + 2] = int(v.split(' ')[-1])
+                    promote += 1
+                if i == 2:
+                    csv[i + 2] = int(v.split(' ')[-1])
+                    promote += 1
+
+        if promote == 2 and csv[0] == 'dts':
+            csv[0] += 'hd' # Looks like its really a DTS-HD stream!?
 
         current_stream = map_keys(keys, csv)
         preferred_stream = choose_stream(current_stream,
