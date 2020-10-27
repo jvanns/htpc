@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-set -eu
+set -u
 
 declare -i SIZE=$1 # In GB
 declare -r IMG_FILE="$2" # Filename of resulting image
-declare -r KV="$3" # Target 'guest' kernel version
+declare -r SYSFILES="${3:-''}" # Optional system files to restore
 
 # Opt for loopback devices unlikely to be used
 NAME="`basename $0 | tr a-z A-Z`"
@@ -13,23 +13,12 @@ LOOPDEV="`losetup -f`" # Whole 'disk'
 DISK=vdx
 
 cleanup() {
-   clear
    echo "$NAME: Beginning cleanup stage..."
 
-   grep -F "$IMG_MOUNT/dev/pts" /proc/mounts && \
-   umount -f "$IMG_MOUNT/dev/pts"
-
-   grep -F "$IMG_MOUNT/proc" /proc/mounts && \
-   umount -f "$IMG_MOUNT/proc"
-  
-   grep -F "$IMG_MOUNT/dev" /proc/mounts && \
-   umount -f "$IMG_MOUNT/dev"
-   
-   grep -F "$IMG_MOUNT/sys" /proc/mounts && \
-   umount -f "$IMG_MOUNT/sys"
-
-   grep -F "$IMG_MOUNT" /proc/mounts && \
-   umount -f "$IMG_MOUNT"
+   grep -F "$IMG_MOUNT" /proc/mounts | awk '{print $2}' | while read mount
+   do
+      umount -f "$mount"
+   done
 
    if [ -e /dev/mapper/$DISK ]
    then
@@ -49,7 +38,6 @@ img_size() {
 }
 
 build_device() {
-   clear
    echo "$NAME: Generating partitioned image file..."
 
    rc=0
@@ -64,7 +52,7 @@ build_device() {
    [ $? -ne 0 ] && return 1
 
    # Fake drive geometry
-   fdisk -b 512 -H 255 -S 63 -C $cylinders -cu $LOOPDEV << EOF
+   fdisk -b 512 -H 255 -S 63 -C $cylinders -c -u $LOOPDEV <<EOF
 d
 x
 i
@@ -78,24 +66,22 @@ p
 t
 83
 a
-1
 w
 EOF
    rc=$?
    losetup -d $LOOPDEV
 
-   return 0
+   return $rc
 }
 
 prepare_boot_loader() {
-   clear
    echo "$NAME: Preparing bootloader partition device mappings..."
 
    s=$((`img_size "$IMG_FILE"` / 512))
 
    losetup $LOOPDEV "$IMG_FILE" && \
    echo "0 $s linear `stat -c %t:%T $LOOPDEV` 0" | dmsetup create $DISK && \
-   kpartx -a /dev/mapper/$DISK && \
+   kpartx -sa /dev/mapper/$DISK && \
    ln -s -f /dev/mapper/$DISK /dev/$DISK && \
    ln -s -f /dev/mapper/${DISK}1 /dev/${DISK}1
 
@@ -103,7 +89,6 @@ prepare_boot_loader() {
 }
 
 format_device() {
-   clear
    echo "$NAME: Formatting device with ext4 filesystem..."
 
    mkfs.ext4 -F -T small -L system /dev/${DISK}1
@@ -112,53 +97,88 @@ format_device() {
 }
 
 mount_device() {
-   clear
    echo "$NAME: Mounting device..."
 
-   mount -t ext4 /dev/${DISK}1 "$IMG_MOUNT" && \
-   mkdir -m 0755 -p "$IMG_MOUNT"/{etc,dev,sys,proc,dev/pts} && \
-   mount -o bind /dev "$IMG_MOUNT/dev" && \
-   mount -o bind /sys "$IMG_MOUNT/sys" && \
-   mount -o bind /proc "$IMG_MOUNT/proc" && \
-   mount -o bind /dev/pts "$IMG_MOUNT/dev/pts"
+   if [ "$1" = "host" ]; then
+      mkdir -m 0755 -p "$IMG_MOUNT"/{dev,sys,proc} && \
+      mount -R /dev "$IMG_MOUNT/dev" && \
+      mount -R /sys "$IMG_MOUNT/sys" && \
+      mount -R /proc "$IMG_MOUNT/proc"
+   elif [ "$1" = "root" ]; then
+      mount -t ext4 /dev/${DISK}1 "$IMG_MOUNT"
+   fi
 
    return $?
 }
 
 bootstrap_system() {
-   clear
    echo "$NAME: Bootstrapping system install..."
 
-   local -r flavour=precise
+   local -r flavour=focal
 
-   debootstrap --variant buildd --arch=amd64 $flavour "$IMG_MOUNT" \
+   debootstrap --no-check-certificate --arch=amd64 $flavour "$IMG_MOUNT" \
    http://archive.ubuntu.com/ubuntu
 
    return $?
 }
 
 install_system() {
-   clear 
    echo "$NAME: Post-bootsrap system install..."
 
-   cp -f /etc/mtab "$IMG_MOUNT/etc" && \
-
    chroot "$IMG_MOUNT" /bin/bash -s <<EOF
-apt-get -y update && \
+export LC_ALL=C
+export LANG=en_GB.UTF-8
+export LANGUAGE=en_GB.UTF-8
+export DEBIAN_FRONTEND=noninteractive
+#
+apt-get -y install "language-pack-${LANG%%_*}"
+locale-gen "$LANG"
+update-locale LANG="$LANG"
+#
+apt-get -y update
 apt-get -y --no-install-recommends install whiptail wget debconf \
-linux nano vim devscripts gnupg locales ubuntu-minimal grub-pc \
-lvm2 pulseaudio man openssh-server openssh-client
-echo -e 'auto eth0\niface eth0 inet dhcp' >> /etc/network/interfaces
+nano vim devscripts gnupg locales ubuntu-minimal grub-pc \
+lvm2 pulseaudio man openssh-server openssh-client pciutils \
+linux-generic initramfs-tools net-tools software-properties-common \
+dkms git bc rsync wpasupplicant wireless-tools xinit xserver-xorg-legacy \
+xserver-xorg xserver-xorg-video-radeon samba dbus-x11
+#
+groupadd -f -g 1000 media
+useradd -c 'HTPC Media Account' -d /home/media \
+   -g 1000 -u 1000 -M -s /bin/bash media
 echo -e 'kubrick' > /etc/hostname
+#
+add-apt-repository -n ppa:team-xbmc/ppa
+add-apt-repository -n ppa:libretro/stable
+add-apt-repository -n multiverse
+add-apt-repository -n universe
+add-apt-repository -n main
+#
+echo -e 'Package: kodi*\\nPin-Priority: 500\\nPin: origin ppa.launchpad.net' > /etc/apt/preferences
+apt-get -y update
+apt-get -y install libvdpau-va-gl1 kodi retroarch*
+#
+apt-get -y upgrade
+apt-get -y dist-upgrade
+apt-get -y autoremove
+apt-get clean all
+#
+sed -i "s/^allowed_users=.*/allowed_users=anybody/" /etc/X11/Xwrapper.config
+echo 'needs_root_rights=yes' >> /etc/X11/Xwrapper.config
+usermod -a -G audio,video,games,pulse,tty media
 sync
 exit
 EOF
+
+   if [ -f "$SYSFILES" ]; then
+      cd "$IMG_MOUNT"
+      tar -xzv --owner=root --group=root -f "$SYSFILES"
+   fi
 
    return 0
 }
 
 set_root_passwd() {
-   clear
    echo "$NAME: Setting default root password..."
 
    chroot "$IMG_MOUNT" /usr/bin/passwd <<EOF
@@ -170,18 +190,22 @@ EOF
 }
 
 install_boot_loader() {
-   clear 
    echo "$NAME: Installing grub boot loader to image..."
 
    rc=0
    flag=''
    grubdir="$IMG_MOUNT/boot/grub"
    uuid="`blkid -s UUID -o value /dev/${DISK}1`"
+   kver="`/bin/ls -t1 ${IMG_MOUNT}/boot/vmlinuz-* | head -n1 | sed 's/.*vmlinuz-//'`"
 
    cat > $grubdir/load.cfg <<EOF
 set root='(hd0,1)'
 search.fs_uuid $uuid root
 set prefix=(\$root)/boot/grub
+EOF
+
+   cat > $grubdir/device.map <<EOF
+(hd0) /dev/${DISK}
 EOF
 
    cat > $grubdir/grub.cfg <<EOF
@@ -190,49 +214,40 @@ set default="0"
 set timeout="3"
 set root='(hd0,1)'
 search --no-floppy --fs-uuid --set=root $uuid
-linux /boot/vmlinuz-${KV} root=UUID=$uuid ro KEYBOARDTYPE=pc KEYTABLE=uk LANG=en_GB
-initrd /boot/initrd.img-${KV}
+linux /boot/vmlinuz-${kver} root=UUID=$uuid ro KEYBOARDTYPE=pc KEYTABLE=uk LANG=en_GB
+initrd /boot/initrd.img-${kver}
 boot
 EOF
-   
-   if [ ! -d /usr/lib/grub/i386-pc/ ]
-   then
-      mkdir -p /usr/lib/grub/i386-pc/
-      cp -f "$IMG_MOUNT"/usr/lib/grub/i386-pc/* /usr/lib/grub/i386-pc/
-      flag='hack'
-   fi
 
-   export LD_LIBRARY_PATH="$IMG_MOUNT/lib"
-
-   "$IMG_MOUNT"/usr/sbin/grub-install \
-   --grub-setup="$IMG_MOUNT"/usr/sbin/grub-setup \
-   --grub-probe="$IMG_MOUNT"/usr/sbin/grub-probe \
-   --grub-mkimage="$IMG_MOUNT"/usr/bin/grub-mkimage \
-   --grub-mkrelpath="$IMG_MOUNT"/usr/bin/grub-mkrelpath \
-   --grub-mkdevicemap="$IMG_MOUNT"/usr/sbin/grub-mkdevicemap \
-   --no-floppy --root-directory="$IMG_MOUNT" --boot-directory=${grubdir%grub} \
-   /dev/${DISK}
-
+   echo "Installing grub for Linux ${kver}..."
+   chroot "$IMG_MOUNT" /usr/sbin/grub-install \
+      --grub-mkdevicemap=/boot/grub/device.map \
+      --boot-directory=/boot \
+      --root-directory=/ \
+      --target=i386-pc \
+      --no-floppy \
+      "${LOOPDEV}"
    rc=$?
 
-   if [ "$flag" = "hack" ]
-   then
-      rm -fr /usr/lib/grub/i386-pc/
+   if [ -r "${IMG_MOUNT}/etc/fstab" ]; then
+      sed -i "/\t\/\t/ c\UUID=$uuid\t/\text4\terrors=remount-ro\t0\t1" "${IMG_MOUNT}/etc/fstab"
+   else
+      echo -e "UUID=$uuid\t/\text4\terrors=remount-ro\t0\t1" > "${IMG_MOUNT}/etc/fstab"
    fi
 
-   unset LD_LIBRARY_PATH
+   rm -f "${grubdir}/device.map"
 
-   return 0
+   return $rc
 }
 
 trap 'cleanup' 0
 
-build_device && \
-prepare_boot_loader && \
-format_device && \
-mount_device && \
-bootstrap_system && \
-install_system && \
-set_root_passwd && \
+build_device
+prepare_boot_loader
+format_device
+mount_device root
+bootstrap_system
+mount_device host
+install_system
+set_root_passwd
 install_boot_loader
-
